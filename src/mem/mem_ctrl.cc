@@ -47,6 +47,7 @@
 #include "debug/NVM.hh"
 #include "debug/QOS.hh"
 #include "mem/mem_interface.hh"
+#include "mem/mySchedule/my_scheduler.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -76,7 +77,9 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
     commandWindow(p.command_window),
     nextBurstAt(0), prevArrival(0),
     nextReqTime(0),
-    stats(*this)
+    stats(*this),
+    myShed(p.mySchedObj)
+
 {
     DPRINTF(MemCtrl, "Setting up controller\n");
     readQueue.resize(p.qos_priorities);
@@ -95,6 +98,8 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
         fatal("Write buffer low threshold %d must be smaller than the "
               "high threshold %d\n", p.write_low_thresh_perc,
               p.write_high_thresh_perc);
+
+    myShed->owner = this;
 }
 
 void
@@ -588,6 +593,8 @@ MemCtrl::chooseNext(MemPacketQueue& queue, Tick extra_col_delay)
             ret = chooseNextFRFCFS(queue, extra_col_delay);
         } else if ( memSchedPolicy == enums::fcfsNR ){
             ret = dram->chooseNextFCFSNRE(queue);
+        } else if ( memSchedPolicy == enums::myScheduler){
+            ret = myShed->chooseRoundRubin(queue);
         }else {
             panic("No scheduling policy chosen\n");
         }

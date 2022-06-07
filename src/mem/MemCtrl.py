@@ -44,7 +44,7 @@ from m5.objects.QoSMemCtrl import *
 
 # Enum for memory scheduling algorithms, currently First-Come
 # First-Served and a First-Row Hit then First-Come First-Served
-class MemSched(Enum): vals = ['fcfs', 'frfcfs', 'fcfsNR']
+class MemSched(Enum): vals = ['fcfs', 'frfcfs', 'fcfsNR', 'myScheduler']
 
 # MemCtrl is a single-channel single-ported Memory controller model
 # that aims to model the most important system-level performance
@@ -91,3 +91,7 @@ class MemCtrl(QoSMemCtrl):
     static_backend_latency = Param.Latency("10ns", "Static backend latency")
 
     command_window = Param.Latency("10ns", "Static backend latency")
+
+    mySchedObj   = Param.myScheduler("fefeff")
+
+

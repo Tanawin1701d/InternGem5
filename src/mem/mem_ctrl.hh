@@ -68,7 +68,7 @@ namespace memory
 
 class DRAMInterface;
 class NVMInterface;
-
+class gem5::mySchedule::myScheduler;
 /**
  * A burst helper helps organize and manage a packet that is larger than
  * the memory burst size. A system packet that is larger than the burst size
@@ -615,7 +615,10 @@ class MemCtrl : public qos::MemCtrl
      */
     void pruneBurstTick();
 
+    gem5::mySchedule::myScheduler* myShed;
+
   public:
+
 
     MemCtrl(const MemCtrlParams &p);
 
