@@ -44,7 +44,7 @@ from m5.objects.QoSMemCtrl import *
 
 # Enum for memory scheduling algorithms, currently First-Come
 # First-Served and a First-Row Hit then First-Come First-Served
-class MemSched(Enum): vals = ['fcfs', 'frfcfs']
+class MemSched(Enum): vals = ['fcfs', 'frfcfs', 'fcfsNR']
 
 # MemCtrl is a single-channel single-ported Memory controller model
 # that aims to model the most important system-level performance

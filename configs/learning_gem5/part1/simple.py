@@ -100,6 +100,9 @@ process.cmd = [binary]
 # Set the cpu to use the process as its workload and create thread contexts
 system.cpu.workload = process
 system.cpu.createThreads()
+#############
+system.mem_ctrl.mem_sched_policy = 'fcfs'
+
 
 # set up the root SimObject and start the simulation
 root = Root(full_system = False, system = system)

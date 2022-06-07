@@ -586,7 +586,9 @@ MemCtrl::chooseNext(MemPacketQueue& queue, Tick extra_col_delay)
             }
         } else if (memSchedPolicy == enums::frfcfs) {
             ret = chooseNextFRFCFS(queue, extra_col_delay);
-        } else {
+        } else if ( memSchedPolicy == enums::fcfsNR ){
+            ret = dram->chooseNextFCFSNRE(queue);
+        }else {
             panic("No scheduling policy chosen\n");
         }
     }

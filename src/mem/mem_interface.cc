@@ -171,6 +171,8 @@ MemInterface::decodePacket(const PacketPtr pkt, Addr pkt_addr,
                    pkt_addr, size);
 }
 
+
+//choose first com first serve without read check
 std::pair<MemPacketQueue::iterator, Tick>
 DRAMInterface::chooseNextFRFCFS(MemPacketQueue& queue, Tick min_col_at) const
 {
@@ -285,6 +287,13 @@ DRAMInterface::chooseNextFRFCFS(MemPacketQueue& queue, Tick min_col_at) const
 
     return std::make_pair(selected_pkt_it, selected_col_at);
 }
+
+MemPacketQueue::iterator
+DRAMInterface::chooseNextFCFSNRE(MemPacketQueue& queue) const
+{
+        return queue.begin();
+}
+
 
 void
 DRAMInterface::activateBank(Rank& rank_ref, Bank& bank_ref,

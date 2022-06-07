@@ -151,7 +151,7 @@ class Water_spatial(Process):
 # ====================
 
 class L1(Cache):
-    latency = args.l1latency
+    #latency = args.l1latency
     mshrs = 12
     tgts_per_mshr = 8
 
@@ -160,7 +160,7 @@ class L1(Cache):
 # ----------------------
 
 class L2(Cache):
-    latency = args.l2latency
+    #latency = args.l2latency
     mshrs = 92
     tgts_per_mshr = 16
     write_buffers = 8
@@ -168,7 +168,6 @@ class L2(Cache):
 # ----------------------
 # Define the cpus
 # ----------------------
-
 busFrequency = Frequency(args.frequency)
 
 if args.timing:
@@ -181,17 +180,20 @@ elif args.detailed:
             for i in range(args.numcpus)]
 else:
     cpus = [AtomicSimpleCPU(cpu_id = i,
-                            clock=args.frequency)
+                            #clock=args.frequency
+                            )
             for i in range(args.numcpus)]
 
 # ----------------------
 # Create a system, and add system wide objects
 # ----------------------
 system = System(cpu = cpus, physmem = SimpleMemory(),
-                membus = SystemXBar(clock = busFrequency))
-system.clock = '1GHz'
+                membus = SystemXBar(#clock = busFrequency
+                ))
+#system.clock = '1GHz'
 
-system.toL2bus = L2XBar(clock = busFrequency)
+system.toL2bus = L2XBar(#clock = busFrequency
+                        )
 system.l2 = L2(size = args.l2size, assoc = 8)
 
 # ----------------------
@@ -207,13 +209,17 @@ system.system_port = system.membus.cpu_side_ports
 # Connect the L2 cache and clusters together
 # ----------------------
 for cpu in cpus:
+    print("test l1")
     cpu.addPrivateSplitL1Caches(L1(size = args.l1size, assoc = 1),
                                 L1(size = args.l1size, assoc = 4))
     # connect cpu level-1 caches to shared level-2 cache
+    print("test666")
     cpu.connectAllPorts(
         system.toL2bus.cpu_side_ports,
         system.membus.cpu_side_ports,
         system.membus.mem_side_ports)
+    print("test555")
+
 
 
 # ----------------------
@@ -269,11 +275,18 @@ system.workload = SEWorkload.init_compatible(root.workload.executable)
 # Run the simulation
 # ----------------------
 
+# test memctrl
+#system.mem_ctrl.mem_sched_policy = Param.MemSched('fcfsNR')
+
+
+
 if args.timing or args.detailed:
     root.system.mem_mode = 'timing'
 
 # instantiate configuration
 m5.instantiate()
+
+
 
 # simulate until program terminates
 if args.maxtick:
