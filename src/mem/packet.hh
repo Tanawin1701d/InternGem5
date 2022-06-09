@@ -365,6 +365,8 @@ class Packet : public Printable
     /// A pointer to the original request.
     RequestPtr req;
 
+    ContextID schedulerCID = -1;
+
   private:
    /**
     * A pointer to the data being transferred. It can be different
@@ -374,6 +376,8 @@ class Packet : public Printable
     * be allocated.
     */
     PacketDataPtr data;
+
+
 
     /// The address of the request.  This address could be virtual or
     /// physical, depending on the system configuration.
@@ -882,6 +886,11 @@ class Packet : public Printable
             size = req->getSize();
             flags.set(VALID_SIZE);
         }
+
+        if (req->hasContextId())
+            schedulerCID = req->contextId();
+
+
     }
 
     /**
@@ -906,6 +915,10 @@ class Packet : public Printable
         }
         size = _blkSize;
         flags.set(VALID_SIZE);
+
+        if (req->hasContextId())
+            schedulerCID = req->contextId();
+
     }
 
     /**
@@ -957,6 +970,12 @@ class Packet : public Printable
                 allocate();
             }
         }
+    
+    
+        if (req->hasContextId())
+            schedulerCID = req->contextId();
+
+    
     }
 
     /**

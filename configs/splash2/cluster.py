@@ -130,7 +130,7 @@ class Water_spatial(Process):
 # ====================
 
 class L1(Cache):
-    latency = args.l1latency
+    #latency = args.l1latency
     mshrs = 12
     tgts_per_mshr = 8
 
@@ -139,7 +139,7 @@ class L1(Cache):
 # ----------------------
 
 class L2(Cache):
-    latency = args.l2latency
+    #latency = args.l2latency
     mshrs = 92
     tgts_per_mshr = 16
     write_buffers = 8
@@ -167,7 +167,7 @@ if args.timing:
         all_l1buses += [cluster.clusterbus]
         cluster.cpus = [TimingSimpleCPU(cpu_id = i + cluster.id,
                                         clock=args.frequency)
-                        for i in range(cpusPerCluster)]
+                        for i in range(int(cpusPerCluster))]
         all_cpus += cluster.cpus
         cluster.l1 = L1(size=args.l1size, assoc = 4)
         all_l1s += [cluster.l1]
@@ -176,11 +176,14 @@ elif args.detailed:
     for j in range(args.numclusters):
         clusters[j].id = j
     for cluster in clusters:
-        cluster.clusterbus = L2XBar(clock=busFrequency)
+        cluster.clusterbus = L2XBar(
+            #clock=busFrequency
+            )
         all_l1buses += [cluster.clusterbus]
         cluster.cpus = [DerivO3CPU(cpu_id = i + cluster.id,
-                                   clock=args.frequency)
-                        for i in range(cpusPerCluster)]
+                                   #clock=args.frequency
+                                   )
+                        for i in range(int(cpusPerCluster))]
         all_cpus += cluster.cpus
         cluster.l1 = L1(size=args.l1size, assoc = 4)
         all_l1s += [cluster.l1]
@@ -203,10 +206,14 @@ else:
 # ----------------------
 system = System(cpu = all_cpus, l1_ = all_l1s, l1bus_ = all_l1buses,
                 physmem = SimpleMemory(),
-                membus = SystemXBar(clock = busFrequency))
-system.clock = '1GHz'
+                membus = SystemXBar(
+                    #clock = busFrequency
+                    ))
+#system.clock = '1GHz'
 
-system.toL2bus = L2XBar(clock = busFrequency)
+system.toL2bus = L2XBar(
+    #clock = busFrequency
+    )
 system.l2 = L2(size = args.l2size, assoc = 8)
 
 # ----------------------

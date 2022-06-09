@@ -1,3 +1,4 @@
+
 # Copyright (c) 2012-2013 ARM Limited
 # All rights reserved.
 #
@@ -282,3 +283,4 @@ root = Root(full_system = False, system = system)
 ###############
 
 Simulation.run(args, root, system, FutureClass)
+

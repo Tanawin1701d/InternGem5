@@ -176,7 +176,8 @@ if args.timing:
             for i in range(args.numcpus)]
 elif args.detailed:
     cpus = [DerivO3CPU(cpu_id = i,
-                       clock=args.frequency)
+                       #clock=args.frequency
+                      )
             for i in range(args.numcpus)]
 else:
     cpus = [AtomicSimpleCPU(cpu_id = i,

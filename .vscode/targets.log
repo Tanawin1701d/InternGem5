@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Tue Jun  7 14:32:42 2022
+# Make data base, printed on Thu Jun  9 09:32:30 2022
 
 # Variables
 
@@ -51,7 +51,7 @@ VTE_VERSION = 6003
 # environment
 VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupport":true}
 # environment
-JOURNAL_STREAM = 8:49337
+JOURNAL_STREAM = 8:51484
 # environment
 XDG_CONFIG_DIRS = /etc/xdg/xdg-ubuntu:/etc/xdg
 # environment
@@ -75,7 +75,7 @@ DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-MANAGERPID = 2351
+MANAGERPID = 2440
 # environment
 LESSOPEN = | /usr/bin/lesspipe %s
 # environment
@@ -91,7 +91,7 @@ PATH = /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/
 # environment
 GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
 # environment
-SESSION_MANAGER = local/kathryn:@/tmp/.ICE-unix/2566,unix/kathryn:/tmp/.ICE-unix/2566
+SESSION_MANAGER = local/kathryn:@/tmp/.ICE-unix/2677,unix/kathryn:/tmp/.ICE-unix/2677
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
@@ -109,7 +109,7 @@ DISABLE_WAYLAND = 1
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-INVOCATION_ID = 14fa668890354f2f9dff831068e0a3b9
+INVOCATION_ID = 78e2a911aae1463a8685d36bab5b318c
 # environment
 GDK_PIXBUF_MODULEDIR = /snap/code/97/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 # default
@@ -133,7 +133,7 @@ PWD = /home/tanawin/Work/Hwsim/InternGem5
 # default
 .LOADED := 
 # environment
-SSH_AGENT_PID = 2525
+SSH_AGENT_PID = 2643
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = ubuntu:GNOME
 # environment
@@ -187,7 +187,7 @@ SHLVL = 1
 # environment
 GNOME_SHELL_SESSION_MODE = ubuntu
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-b957c4d5-77d0-4220-aebc-faaea24df9e2.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-400c138b-148d-445d-8416-38ec18fc961a.sock
 # default
 MAKE_VERSION := 4.2.1
 # environment
@@ -243,11 +243,11 @@ SNAP_NAME = code
 # environment
 LC_ALL = C
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/cef8baf1_804f_476f_b1eb_de1b9683fdd9
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/d1c43289_6db4_4c57_bd43_dc9985b6dbfc
 # automatic
 ^F = $(notdir $^)
 # environment
-GNOME_TERMINAL_SERVICE = :1.96
+GNOME_TERMINAL_SERVICE = :1.84
 # default
 SUFFIXES := 
 # environment
@@ -269,7 +269,7 @@ LANG = C
 # environment
 TERM = xterm-256color
 # environment
-VSCODE_PID = 76223
+VSCODE_PID = 5503
 # variable set hash-table stats:
 # Load=129/1024=13%, Rehash=0, Collisions=19/151=13%
 
@@ -279,10 +279,9 @@ VSCODE_PID = 76223
 
 # Directories
 
- 
-# . (device 2051, inode 3672976): 28 files, no impossibilities.
+# . (device 2051, inode 3672976): 29 files, no impossibilities.
 
-# 28 files, no impossibilities in 1 directories.
+# 29 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -295,6 +294,7 @@ all:
 #  Command line target.
 #  Implicit rule search has been done.
 #  File does not exist.
+ 
 #  File has not been updated.
 
 # Not a target:
@@ -332,12 +332,12 @@ GNUmakefile:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 36 / storage = 354 B / avg = 9 B
-# current buf: size = 8162 B / used = 354 B / count = 36 / avg = 9 B
+# strcache buffers: 1 (0) / strings = 37 / storage = 360 B / avg = 9 B
+# current buf: size = 8162 B / used = 360 B / count = 37 / avg = 9 B
 
-# strcache performance: lookups = 39 / hit rate = 7%
+# strcache performance: lookups = 40 / hit rate = 7%
 # hash-table stats:
-# Load=36/8192=0%, Rehash=0, Collisions=1/39=3%
-# Finished Make data base on Tue Jun  7 14:32:42 2022
+# Load=37/8192=0%, Rehash=0, Collisions=1/40=2%
+# Finished Make data base on Thu Jun  9 09:32:30 2022
 
  

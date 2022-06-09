@@ -242,7 +242,7 @@ typedef std::deque<MemPacket*> MemPacketQueue;
 class MemCtrl : public qos::MemCtrl
 {
   private:
-
+    friend class gem5::mySchedule::myScheduler;
     // For now, make use of a queued response port to avoid dealing with
     // flow control for the responses being sent back
     class MemoryPort : public QueuedResponsePort

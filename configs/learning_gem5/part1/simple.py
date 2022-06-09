@@ -101,7 +101,8 @@ process.cmd = [binary]
 system.cpu.workload = process
 system.cpu.createThreads()
 #############
-system.mem_ctrl.mem_sched_policy = 'fcfs'
+system.mem_ctrl.mem_sched_policy = 'myScheduler'
+system.mem_ctrl.mySchedObj       = myScheduler()
 
 
 # set up the root SimObject and start the simulation

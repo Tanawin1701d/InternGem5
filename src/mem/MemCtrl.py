@@ -41,6 +41,7 @@
 from m5.params import *
 from m5.proxy import *
 from m5.objects.QoSMemCtrl import *
+from m5.objects.myScheduler import *
 
 # Enum for memory scheduling algorithms, currently First-Come
 # First-Served and a First-Row Hit then First-Come First-Served
@@ -81,7 +82,7 @@ class MemCtrl(QoSMemCtrl):
                                            "switching to reads")
 
     # scheduler, address map and page policy
-    mem_sched_policy = Param.MemSched('frfcfs', "Memory scheduling policy")
+    mem_sched_policy = Param.MemSched('myScheduler', "Memory scheduling policy")
 
     # pipeline latency of the controller and PHY, split into a
     # frontend part and a backend part, with reads and writes serviced
@@ -92,6 +93,6 @@ class MemCtrl(QoSMemCtrl):
 
     command_window = Param.Latency("10ns", "Static backend latency")
 
-    mySchedObj   = Param.myScheduler("fefeff")
+    mySchedObj     = Param.myScheduler(myScheduler(),"fefeff")
 
 
