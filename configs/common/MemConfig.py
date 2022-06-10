@@ -118,8 +118,9 @@ def config_mem(options, system):
 
     # Semi-optional options
     # Must have either mem_type or nvm_type or both
-    opt_mem_type = getattr(options, "mem_type", None)
-    opt_nvm_type = getattr(options, "nvm_type", None)
+    opt_mem_sched = getattr(options, "memSched", "frfcfs")
+    opt_mem_type  = getattr(options, "mem_type", None)
+    opt_nvm_type  = getattr(options, "nvm_type", None)
     if not opt_mem_type and not opt_nvm_type:
         fatal("Must have option for either mem-type or nvm-type, or both")
 
@@ -219,7 +220,8 @@ def config_mem(options, system):
 
                 # Create the controller that will drive the interface
                 mem_ctrl = dram_intf.controller()
-
+                #############################################################
+                mem_ctrl.mem_sched_policy = opt_mem_sched
                 mem_ctrls.append(mem_ctrl)
 
             elif opt_nvm_type and (not opt_mem_type or range_iter % 2 == 0):
@@ -237,7 +239,6 @@ def config_mem(options, system):
                 if not opt_hybrid_channel:
                     mem_ctrl = m5.objects.MemCtrl()
                     mem_ctrl.nvm = nvm_intf
-
                     mem_ctrls.append(mem_ctrl)
                 else:
                     nvm_intfs.append(nvm_intf)

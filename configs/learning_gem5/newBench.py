@@ -42,6 +42,7 @@
 # "m5 test.py"
 
 import argparse
+import string
 import sys
 import os
 
@@ -118,6 +119,11 @@ def get_processes(args):
 
 
 parser = argparse.ArgumentParser()
+
+
+parser.add_argument("-msct", "--memSched", help = "memory schedule policy", default = "frfcfs")
+
+
 Options.addCommonOptions(parser)
 Options.addSEOptions(parser)
 
@@ -262,6 +268,13 @@ else:
     CacheConfig.config_cache(args, system)
     MemConfig.config_mem(args, system)
     config_filesystem(system, args)
+
+# system.mem_ctrl = MemCtrl()
+# system.mem_ctrl.dram = DDR3_1600_8x8()
+# #system.mem_ctrl.dram.range = system.mem_ranges[0]
+# system.mem_ctrl.port = system.membus.mem_side_ports
+# system.mem_ctrl.mem_sched_policy = 'myScheduler'
+
 
 system.workload = SEWorkload.init_compatible(mp0_path)
 

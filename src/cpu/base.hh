@@ -64,6 +64,8 @@
 #include "sim/probe/probe.hh"
 #include "sim/system.hh"
 
+//#include "debug/scheduler.hh"
+
 namespace gem5
 {
 
@@ -301,6 +303,7 @@ class BaseCPU : public ClockedObject
     ThreadID
     contextToThread(ContextID cid)
     {
+       // DPRINTF(scheduler, "context id %d have been convert to thread Id %d", cid, static_cast<ThreadID>(cid - threadContexts[0]->contextId() );
         return static_cast<ThreadID>(cid - threadContexts[0]->contextId());
     }
 
