@@ -52,17 +52,17 @@ system.mem_ranges = [AddrRange('512MB')] # Create an address range
 system.cpu = TimingSimpleCPU()
 
 # Create the simple memory object
-system.memobj = SimpleMemobj()
+system.memobj = myCache()
 
 # Hook the CPU ports up to the cache
-system.cpu.icache_port = system.memobj.inst_port
-system.cpu.dcache_port = system.memobj.data_port
+system.cpu.icache_port = system.memobj.i_cpu_slave_port
+system.cpu.dcache_port = system.memobj.d_cpu_slave_port
 
 # Create a memory bus, a coherent crossbar, in this case
 system.membus = SystemXBar()
 
 # Connect the memobj
-system.memobj.mem_side = system.membus.cpu_side_ports
+system.memobj.mem_master_port = system.membus.cpu_side_ports
 
 # create the interrupt controller for the CPU and connect to the membus
 system.cpu.createInterruptController()
