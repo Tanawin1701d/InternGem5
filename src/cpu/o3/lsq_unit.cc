@@ -1202,8 +1202,9 @@ LSQUnit::trySendPacket(bool isLoad, PacketPtr data_pkt)
     bool ret = true;
     bool cache_got_blocked = false;
 
+    data_pkt->fromNetwork = cpu->fromNetwork;
     LSQRequest *request = dynamic_cast<LSQRequest*>(data_pkt->senderState);
-
+    
     if (!lsq->cacheBlocked() &&
         lsq->cachePortAvailable(isLoad)) {
         if (!dcachePort->sendTimingReq(data_pkt)) {

@@ -243,6 +243,9 @@ class LSQ
         bool isDelayed() { return flags.isSet(Flag::Delayed); }
 
       public:
+      ///////////// added
+        CPU*      requestorCpu;
+      /////////////////////////////////////////
         LSQUnit& _port;
         const DynInstPtr _inst;
         uint32_t _taskId;
@@ -260,11 +263,12 @@ class LSQ
 
       protected:
         LSQUnit* lsqUnit() { return &_port; }
-        LSQRequest(LSQUnit* port, const DynInstPtr& inst, bool isLoad);
+        LSQRequest(LSQUnit* port, const DynInstPtr& inst, bool isLoad, CPU* reqCpu = nullptr);
         LSQRequest(LSQUnit* port, const DynInstPtr& inst, bool isLoad,
                 const Addr& addr, const uint32_t& size,
                 const Request::Flags& flags_, PacketDataPtr data=nullptr,
-                uint64_t* res=nullptr, AtomicOpFunctorPtr amo_op=nullptr);
+                uint64_t* res=nullptr, AtomicOpFunctorPtr amo_op=nullptr,
+                 CPU* reqCpu = nullptr);
 
         bool
         isLoad() const
@@ -566,9 +570,10 @@ class LSQ
         SingleDataRequest(LSQUnit* port, const DynInstPtr& inst,
                 bool isLoad, const Addr& addr, const uint32_t& size,
                 const Request::Flags& flags_, PacketDataPtr data=nullptr,
-                uint64_t* res=nullptr, AtomicOpFunctorPtr amo_op=nullptr) :
+                uint64_t* res=nullptr, AtomicOpFunctorPtr amo_op=nullptr, 
+                CPU* reqCpu = nullptr) :
             LSQRequest(port, inst, isLoad, addr, size, flags_, data, res,
-                       std::move(amo_op)) {}
+                       std::move(amo_op), reqCpu = reqCpu) {}
 
         virtual ~SingleDataRequest() {}
         virtual void initiateTranslation();
@@ -590,7 +595,7 @@ class LSQ
     {
       public:
         HtmCmdRequest(LSQUnit* port, const DynInstPtr& inst,
-                const Request::Flags& flags_);
+                const Request::Flags& flags_, CPU* reqCpu = nullptr);
         virtual ~HtmCmdRequest() {}
         virtual void initiateTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
@@ -610,9 +615,9 @@ class LSQ
         SplitDataRequest(LSQUnit* port, const DynInstPtr& inst,
                 bool isLoad, const Addr& addr, const uint32_t& size,
                 const Request::Flags & flags_, PacketDataPtr data=nullptr,
-                uint64_t* res=nullptr) :
+                uint64_t* res=nullptr, CPU* reqCpu = nullptr) :
             LSQRequest(port, inst, isLoad, addr, size, flags_, data, res,
-                       nullptr),
+                       nullptr, reqCpu = reqCpu),
             numFragments(0),
             numReceivedPackets(0),
             _mainReq(nullptr),

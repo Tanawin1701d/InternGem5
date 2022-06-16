@@ -3,6 +3,8 @@
 
 
 #include "debug/scheduler.hh"
+#include "debug/passingTest.hh"
+#include "base/trace.hh"
 #include "mem/mem_ctrl.hh"
 #include "params/myScheduler.hh"
 #include <set>

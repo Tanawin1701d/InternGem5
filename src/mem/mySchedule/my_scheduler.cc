@@ -37,8 +37,18 @@ namespace mySchedule
         for (auto memIter = queue.begin(); memIter != queue.end(); memIter++ ){
             // convert to memory packet
             gem5::memory::MemPacket* memPkt = *memIter;
-            //context  id 
+            //context  id
+             
             ContexParam cpr = memPkt->pkt->schedulerCID;
+
+            if (memPkt->pkt->fromNetwork){
+                DPRINTF(passingTest,  "this come from network\n" );
+            }else{
+                DPRINTF(passingTest,  "this come from cpu\n" );
+            }
+            
+
+
 
             readyNumTurn = std::min(readyNumTurn, cpr);
             if( (cpr > lastRR) && (cpr < readyNumNext) ){

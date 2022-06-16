@@ -367,6 +367,8 @@ class Packet : public Printable
 
     ContextID schedulerCID = -1;
 
+    bool      fromNetwork = false;
+
   private:
    /**
     * A pointer to the data being transferred. It can be different
@@ -939,7 +941,8 @@ class Packet : public Printable
            headerDelay(pkt->headerDelay),
            snoopDelay(0),
            payloadDelay(pkt->payloadDelay),
-           senderState(pkt->senderState)
+           senderState(pkt->senderState),
+           fromNetwork(pkt->fromNetwork)
     {
         if (!clear_flags)
             flags.set(pkt->flags & COPY_FLAGS);
@@ -1023,15 +1026,19 @@ class Packet : public Printable
      * Fine-tune the MemCmd type if it's not a vanilla read or write.
      */
     static PacketPtr
-    createRead(const RequestPtr &req)
+    createRead(const RequestPtr &req, bool fromNtk = false)
     {
-        return new Packet(req, makeReadCmd(req));
+        PacketPtr preRet = new Packet(req, makeReadCmd(req));
+        preRet->fromNetwork = fromNtk;
+        return preRet;
     }
 
     static PacketPtr
-    createWrite(const RequestPtr &req)
+    createWrite(const RequestPtr &req, bool fromNtk = false)
     {
-        return new Packet(req, makeWriteCmd(req));
+        PacketPtr preRet = new Packet(req, makeWriteCmd(req));
+        preRet->fromNetwork = fromNtk;
+        return preRet;
     }
 
     /**

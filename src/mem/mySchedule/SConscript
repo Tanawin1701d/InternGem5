@@ -5,3 +5,4 @@ SimObject('myScheduler.py', sim_objects=['myScheduler'])
 Source('my_scheduler.cc')
 
 DebugFlag('scheduler')
+DebugFlag('passingTest')

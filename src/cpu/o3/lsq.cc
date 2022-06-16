@@ -792,13 +792,13 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
         if (htm_cmd) {
             assert(addr == 0x0lu);
             assert(size == 8);
-            request = new HtmCmdRequest(&thread[tid], inst, flags);
+            request = new HtmCmdRequest(&thread[tid], inst, flags, cpu);
         } else if (needs_burst) {
             request = new SplitDataRequest(&thread[tid], inst, isLoad, addr,
-                    size, flags, data, res);
+                    size, flags, data, res, cpu);
         } else {
             request = new SingleDataRequest(&thread[tid], inst, isLoad, addr,
-                    size, flags, data, res, std::move(amo_op));
+                    size, flags, data, res, std::move(amo_op),cpu);
         }
         assert(request);
         request->_byteEnable = byte_enable;
@@ -1030,11 +1030,12 @@ LSQ::SplitDataRequest::initiateTranslation()
 }
 
 LSQ::LSQRequest::LSQRequest(
-        LSQUnit *port, const DynInstPtr& inst, bool isLoad) :
+        LSQUnit *port, const DynInstPtr& inst, bool isLoad, CPU* reqCpu) :
     _state(State::NotIssued),
     _port(*port), _inst(inst), _data(nullptr),
     _res(nullptr), _addr(0), _size(0), _flags(0),
-    _numOutstandingPackets(0), _amo_op(nullptr)
+    _numOutstandingPackets(0), _amo_op(nullptr),
+    requestorCpu(reqCpu)
 {
     flags.set(Flag::IsLoad, isLoad);
     flags.set(Flag::WriteBackToRegister,
@@ -1047,7 +1048,9 @@ LSQ::LSQRequest::LSQRequest(
 LSQ::LSQRequest::LSQRequest(
         LSQUnit *port, const DynInstPtr& inst, bool isLoad,
         const Addr& addr, const uint32_t& size, const Request::Flags& flags_,
-           PacketDataPtr data, uint64_t* res, AtomicOpFunctorPtr amo_op)
+           PacketDataPtr data, uint64_t* res, AtomicOpFunctorPtr amo_op,
+           CPU* reqCpu
+           )
     : _state(State::NotIssued),
     numTranslatedFragments(0),
     numInTranslationFragments(0),
@@ -1055,7 +1058,9 @@ LSQ::LSQRequest::LSQRequest(
     _res(res), _addr(addr), _size(size),
     _flags(flags_),
     _numOutstandingPackets(0),
-    _amo_op(std::move(amo_op))
+    _amo_op(std::move(amo_op)),
+    requestorCpu(reqCpu)
+
 {
     flags.set(Flag::IsLoad, isLoad);
     flags.set(Flag::WriteBackToRegister,
@@ -1361,9 +1366,9 @@ LSQ::DcachePort::recvReqRetry()
 }
 
 LSQ::HtmCmdRequest::HtmCmdRequest(LSQUnit* port, const DynInstPtr& inst,
-        const Request::Flags& flags_) :
+        const Request::Flags& flags_,CPU* reqCpu) :
     SingleDataRequest(port, inst, true, 0x0lu, 8, flags_,
-        nullptr, nullptr, nullptr)
+        nullptr, nullptr, nullptr, reqCpu = reqCpu)
 {
 }
 

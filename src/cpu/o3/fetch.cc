@@ -634,6 +634,7 @@ Fetch::finishTranslation(const Fault &fault, const RequestPtr &mem_req)
 
         // Build packet here.
         PacketPtr data_pkt = new Packet(mem_req, MemCmd::ReadReq);
+        data_pkt->fromNetwork = cpu->fromNetwork;
         data_pkt->dataDynamic(new uint8_t[fetchBufferSize]);
 
         fetchBufferPC[tid] = fetchBufferBlockPC;
@@ -1359,6 +1360,7 @@ Fetch::recvReqRetry()
         assert(cacheBlocked);
         assert(retryTid != InvalidThreadID);
         assert(fetchStatus[retryTid] == IcacheWaitRetry);
+        retryPkt->fromNetwork = cpu->fromNetwork;
 
         if (icachePort.sendTimingReq(retryPkt)) {
             fetchStatus[retryTid] = IcacheWaitResponse;

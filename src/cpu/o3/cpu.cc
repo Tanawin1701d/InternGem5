@@ -1668,6 +1668,8 @@ CPU::htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
     abort_pkt->dataStatic(memData);
     abort_pkt->setHtmTransactional(htm_uid);
 
+    abort_pkt->fromNetwork = fromNetwork;
+
     // TODO include correct error handling here
     if (!iew.ldstQueue.getDataPort().sendTimingReq(abort_pkt)) {
         panic("HTM abort signal was not sent to the memory subsystem.");

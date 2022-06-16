@@ -55,6 +55,7 @@
 #include "base/trace.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/thread_context.hh"
+#include "debug/passingTest.hh"
 #include "debug/Mwait.hh"
 #include "debug/SyscallVerbose.hh"
 #include "debug/Thread.hh"
@@ -139,12 +140,19 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
       syscallRetryLatency(p.syscallRetryLatency),
       pwrGatingLatency(p.pwr_gating_latency),
       powerGatingOnIdle(p.power_gating_on_idle),
-      enterPwrGatingEvent([this]{ enterPwrGating(); }, name())
+      enterPwrGatingEvent([this]{ enterPwrGating(); }, name()),
+      fromNetwork(p.is_from_network)
 {
     // if Python did not provide a valid ID, do it here
     if (_cpuId == -1 ) {
         _cpuId = cpuList.size();
     }
+
+    if (fromNetwork){
+                DPRINTF(passingTest,  "this come from network\n" );
+            }else{
+                DPRINTF(passingTest,  "this come from cpu\n" );
+            }
 
     // add self to global list of CPUs
     cpuList.push_back(this);

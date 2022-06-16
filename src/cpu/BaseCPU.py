@@ -129,6 +129,7 @@ class BaseCPU(ClockedObject):
     def takeOverFrom(self, old_cpu):
         self._ccObject.takeOverFrom(old_cpu._ccObject)
 
+    is_from_network = Param.Bool(False, "is this core is acted as network handler core")
 
     system = Param.System(Parent.any, "system object")
     cpu_id = Param.Int(-1, "CPU identifier")

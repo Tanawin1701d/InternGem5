@@ -172,6 +172,8 @@ class BaseCPU : public ClockedObject
 
   public:
 
+    bool fromNetwork = false;
+
     /**
      * Purely virtual method that returns a reference to the data
      * port. All subclasses must implement this method.
