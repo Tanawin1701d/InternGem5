@@ -971,7 +971,10 @@ LSQ::SplitDataRequest::initiateTranslation()
 
     _mainReq = std::make_shared<Request>(base_addr,
                 _size, _flags, _inst->requestorId(),
-                _inst->pcState().instAddr(), _inst->contextId());
+                _inst->pcState().instAddr(), _inst->contextId(), nullptr,requestorCpu->cpuId());
+
+    _mainReq->fromNetwork = requestorCpu->fromNetwork;
+
     _mainReq->setByteEnable(_byteEnable);
 
     // Paddr is not used in _mainReq. However, we will accumulate the flags
@@ -1092,8 +1095,12 @@ LSQ::LSQRequest::addReq(Addr addr, unsigned size,
         auto req = std::make_shared<Request>(
                 addr, size, _flags, _inst->requestorId(),
                 _inst->pcState().instAddr(), _inst->contextId(),
-                std::move(_amo_op));
+                std::move(_amo_op), requestorCpu->cpuId());
+
+                 req->fromNetwork = requestorCpu->fromNetwork;
         req->setByteEnable(byte_enable);
+
+
         _reqs.push_back(req);
     }
 }

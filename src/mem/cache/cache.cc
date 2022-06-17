@@ -378,7 +378,10 @@ Cache::handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk, Tick forward_time,
             RequestPtr req = std::make_shared<Request>(pkt->req->getPaddr(),
                                                     pkt->req->getSize(),
                                                     pkt->req->getFlags(),
-                                                    pkt->req->requestorId());
+                                                    pkt->req->requestorId(), 
+                                                    pkt->req->cpuId
+                                                   );
+                        req->fromNetwork = pkt->req->fromNetwork;
             pf = new Packet(req, pkt->cmd);
             pf->allocate();
             assert(pf->matchAddr(pkt));
@@ -915,7 +918,8 @@ Cache::cleanEvictBlk(CacheBlk *blk)
 
     // Creating a zero sized write, a message to the snoop filter
     RequestPtr req = std::make_shared<Request>(
-        regenerateBlkAddr(blk), blkSize, 0, Request::wbRequestorId);
+        regenerateBlkAddr(blk), blkSize, 0, Request::wbRequestorId, blk->cpuId);
+         req->fromNetwork = blk->fromNetwork;
 
     if (blk->isSecure())
         req->setFlags(Request::SECURE);

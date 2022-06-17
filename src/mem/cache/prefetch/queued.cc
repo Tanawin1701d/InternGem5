@@ -62,7 +62,7 @@ Queued::DeferredPacket::createPkt(Addr paddr, unsigned blk_size,
                                             Tick t) {
     /* Create a prefetch memory request */
     RequestPtr req = std::make_shared<Request>(paddr, blk_size,
-                                                0, requestor_id);
+                                                0, requestor_id, -112);
 
     if (pfInfo.isSecure()) {
         req->setFlags(Request::SECURE);
@@ -370,7 +370,7 @@ Queued::createPrefetchRequest(Addr addr, PrefetchInfo const &pfi,
 {
     RequestPtr translation_req = std::make_shared<Request>(
             addr, blkSize, pkt->req->getFlags(), requestorId, pfi.getPC(),
-            pkt->req->contextId());
+            pkt->req->contextId(), nullptr, -112);
     translation_req->setFlags(Request::PREFETCH);
     return translation_req;
 }

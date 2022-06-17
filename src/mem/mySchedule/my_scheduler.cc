@@ -25,27 +25,27 @@ namespace mySchedule
         //gem5::memory::MemPacket* memPkt = *(queue.begin());
         //DPRINTF(scheduler,"%d\n",memPkt->pkt->schedulerCID);
 
-        ContexParam                            minRR       = INT_MAX;
-        ContexParam                            minALL      = INT_MAX;
+        CPUINDEXParam                            minRR       = INT_MAX;
+        CPUINDEXParam                            minALL      = INT_MAX;
         
         gem5::memory::MemPacketQueue::iterator minRR_iter  = queue.end();
         gem5::memory::MemPacketQueue::iterator minALL_iter = queue.end();
 
-        ContexParam                            readyNumNext= INT_MAX;
-        ContexParam                            readyNumTurn= INT_MAX;
+        CPUINDEXParam                            readyNumNext= INT_MAX;
+        CPUINDEXParam                            readyNumTurn= INT_MAX;
         
         for (auto memIter = queue.begin(); memIter != queue.end(); memIter++ ){
             // convert to memory packet
             gem5::memory::MemPacket* memPkt = *memIter;
             //context  id
              
-            ContexParam cpr = memPkt->pkt->schedulerCID;
+            CPUINDEXParam cpr = memPkt->pkt->req->cpuId;
 
-            if (memPkt->pkt->fromNetwork){
-                DPRINTF(passingTest,  "this come from network\n" );
-            }else{
-                DPRINTF(passingTest,  "this come from cpu\n" );
-            }
+            // if (memPkt->pkt->fromNetwork){
+            //     DPRINTF(passingTest,  "this come from network=============== %d\n", cpr );
+            // }else{
+            //     DPRINTF(passingTest,  "this come from cpu contextId %d\n", cpr );
+            // }
             
 
 

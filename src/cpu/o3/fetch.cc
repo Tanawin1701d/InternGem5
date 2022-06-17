@@ -585,7 +585,9 @@ Fetch::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
     RequestPtr mem_req = std::make_shared<Request>(
         fetchBufferBlockPC, fetchBufferSize,
         Request::INST_FETCH, cpu->instRequestorId(), pc,
-        cpu->thread[tid]->contextId());
+        cpu->thread[tid]->contextId(),nullptr, cpu->cpuId());
+
+        mem_req->fromNetwork = cpu->fromNetwork;
 
     mem_req->taskId(cpu->taskId());
 
@@ -634,7 +636,9 @@ Fetch::finishTranslation(const Fault &fault, const RequestPtr &mem_req)
 
         // Build packet here.
         PacketPtr data_pkt = new Packet(mem_req, MemCmd::ReadReq);
-        data_pkt->fromNetwork = cpu->fromNetwork;
+        data_pkt->req->fromNetwork  = cpu->fromNetwork;
+        data_pkt->req->cpuId        = cpu->cpuId();
+
         data_pkt->dataDynamic(new uint8_t[fetchBufferSize]);
 
         fetchBufferPC[tid] = fetchBufferBlockPC;
@@ -1360,7 +1364,8 @@ Fetch::recvReqRetry()
         assert(cacheBlocked);
         assert(retryTid != InvalidThreadID);
         assert(fetchStatus[retryTid] == IcacheWaitRetry);
-        retryPkt->fromNetwork = cpu->fromNetwork;
+        retryPkt->req->fromNetwork  = cpu->fromNetwork;
+        retryPkt->req->cpuId        = cpu->cpuId();
 
         if (icachePort.sendTimingReq(retryPkt)) {
             fetchStatus[retryTid] = IcacheWaitResponse;

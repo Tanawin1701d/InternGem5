@@ -1653,9 +1653,8 @@ CPU::htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
     commit.resetHtmStartsStops(tid);
 
     // notify l1 d-cache (ruby) that core has aborted transaction
-    RequestPtr req =
-        std::make_shared<Request>(addr, size, flags, _dataRequestorId);
-
+    RequestPtr req = std::make_shared<Request>(addr, size, flags, _dataRequestorId,cpuId() );
+    req->fromNetwork = fromNetwork;
     req->taskId(taskId());
     req->setContext(thread[tid]->contextId());
     req->setHtmAbortCause(cause);
@@ -1668,7 +1667,8 @@ CPU::htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
     abort_pkt->dataStatic(memData);
     abort_pkt->setHtmTransactional(htm_uid);
 
-    abort_pkt->fromNetwork = fromNetwork;
+    abort_pkt->req->fromNetwork  = fromNetwork;
+    abort_pkt->req->cpuId        = cpuId();
 
     // TODO include correct error handling here
     if (!iew.ldstQueue.getDataPort().sendTimingReq(abort_pkt)) {

@@ -41,6 +41,7 @@
 #include "mem/mem_ctrl.hh"
 
 #include "base/trace.hh"
+#include "debug/passingTest.hh"
 #include "debug/DRAM.hh"
 #include "debug/Drain.hh"
 #include "debug/MemCtrl.hh"
@@ -435,6 +436,13 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
 
     panic_if(!(pkt->isRead() || pkt->isWrite()),
              "Should only see read and writes at memory controller\n");
+
+
+     if (pkt->req->fromNetwork){
+                DPRINTF(passingTest,  "this come from network=============== %d\n", pkt->req->cpuId );
+            }else{
+                DPRINTF(passingTest,  "this come from cpuid  %d\n", pkt->req->cpuId );
+            }
 
     // Calc avg gap between requests
     if (prevArrival != 0) {

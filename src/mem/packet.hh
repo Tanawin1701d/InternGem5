@@ -365,10 +365,6 @@ class Packet : public Printable
     /// A pointer to the original request.
     RequestPtr req;
 
-    ContextID schedulerCID = -1;
-
-    bool      fromNetwork = false;
-
   private:
    /**
     * A pointer to the data being transferred. It can be different
@@ -889,9 +885,6 @@ class Packet : public Printable
             flags.set(VALID_SIZE);
         }
 
-        if (req->hasContextId())
-            schedulerCID = req->contextId();
-
 
     }
 
@@ -908,6 +901,7 @@ class Packet : public Printable
            htmTransactionUid(0),
            headerDelay(0),
            snoopDelay(0), payloadDelay(0), senderState(NULL)
+
     {
         flags.clear();
         if (req->hasPaddr()) {
@@ -918,8 +912,6 @@ class Packet : public Printable
         size = _blkSize;
         flags.set(VALID_SIZE);
 
-        if (req->hasContextId())
-            schedulerCID = req->contextId();
 
     }
 
@@ -941,8 +933,7 @@ class Packet : public Printable
            headerDelay(pkt->headerDelay),
            snoopDelay(0),
            payloadDelay(pkt->payloadDelay),
-           senderState(pkt->senderState),
-           fromNetwork(pkt->fromNetwork)
+           senderState(pkt->senderState)
     {
         if (!clear_flags)
             flags.set(pkt->flags & COPY_FLAGS);
@@ -973,10 +964,6 @@ class Packet : public Printable
                 allocate();
             }
         }
-    
-    
-        if (req->hasContextId())
-            schedulerCID = req->contextId();
 
     
     }
@@ -1026,18 +1013,16 @@ class Packet : public Printable
      * Fine-tune the MemCmd type if it's not a vanilla read or write.
      */
     static PacketPtr
-    createRead(const RequestPtr &req, bool fromNtk = false)
+    createRead(const RequestPtr &req)
     {
         PacketPtr preRet = new Packet(req, makeReadCmd(req));
-        preRet->fromNetwork = fromNtk;
         return preRet;
     }
 
     static PacketPtr
-    createWrite(const RequestPtr &req, bool fromNtk = false)
+    createWrite(const RequestPtr &req)
     {
         PacketPtr preRet = new Packet(req, makeWriteCmd(req));
-        preRet->fromNetwork = fromNtk;
         return preRet;
     }
 

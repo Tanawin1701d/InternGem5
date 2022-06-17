@@ -15,13 +15,13 @@ namespace mySchedule
 {
 
 
-    typedef ContextID ContexParam;
+    typedef int CPUINDEXParam;
 
 
     class myScheduler : public SimObject
     {
       private:
-        ContexParam  lastRR = INT_MIN;
+        CPUINDEXParam  lastRR = INT_MIN;
 
       public:
         

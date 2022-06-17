@@ -58,6 +58,7 @@
 
 #include "base/amo.hh"
 #include "base/compiler.hh"
+#include "base/logging.hh"
 #include "base/flags.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
@@ -97,6 +98,9 @@ typedef uint16_t RequestorID;
 class Request
 {
   public:
+    bool fromNetwork = false;
+    int  cpuId       = -1;
+
     typedef uint64_t FlagsType;
     typedef uint8_t ArchFlagsType;
     typedef gem5::Flags<FlagsType> Flags;
@@ -454,16 +458,19 @@ class Request
      *  _flags and privateFlags are cleared by Flags default
      *  constructor.)
      */
-    Request() {}
+    Request(int cpuId = -1):cpuId(cpuId){
+        //panic_if(this->cpuId == -1, "default constructor encounter with no cpuid\n" );
+    }
 
     /**
      * Constructor for physical (e.g. device) requests.  Initializes
      * just physical address, size, flags, and timestamp (to curTick()).
      * These fields are adequate to perform a request.
      */
-    Request(Addr paddr, unsigned size, Flags flags, RequestorID id) :
-        _paddr(paddr), _size(size), _requestorId(id), _time(curTick())
+    Request(Addr paddr, unsigned size, Flags flags, RequestorID id, int cpuId = -1) :
+        _paddr(paddr), _size(size), _requestorId(id), _time(curTick()), cpuId(cpuId)
     {
+        //panic_if(this->cpuId == -1, "constructor1 encounter with no cpuid\n" );   
         _flags.set(flags);
         privateFlags.set(VALID_PADDR|VALID_SIZE);
         _byteEnable = std::vector<bool>(size, true);
@@ -471,8 +478,9 @@ class Request
 
     Request(Addr vaddr, unsigned size, Flags flags,
             RequestorID id, Addr pc, ContextID cid,
-            AtomicOpFunctorPtr atomic_op=nullptr)
+            AtomicOpFunctorPtr atomic_op=nullptr, int cpuId = -1) : cpuId(cpuId)
     {
+        //panic_if(this->cpuId == -1, "constructor2 encounter with no cpuid\n" );
         setVirt(vaddr, size, flags, id, pc, std::move(atomic_op));
         setContext(cid);
         _byteEnable = std::vector<bool>(size, true);
@@ -491,10 +499,13 @@ class Request
           _pc(other._pc), _reqInstSeqNum(other._reqInstSeqNum),
           _localAccessor(other._localAccessor),
           translateDelta(other.translateDelta),
-          accessDelta(other.accessDelta), depth(other.depth)
+          accessDelta(other.accessDelta), depth(other.depth),
+          cpuId(other.cpuId), fromNetwork(other.fromNetwork)
     {
+        //panic_if(this->cpuId == -1, "constructor3 encounter with no cpuid\n" );
         atomicOpFunctor.reset(other.atomicOpFunctor ?
                                 other.atomicOpFunctor->clone() : nullptr);
+        
     }
 
     ~Request() {}

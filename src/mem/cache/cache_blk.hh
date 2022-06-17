@@ -70,6 +70,8 @@ namespace gem5
 class CacheBlk : public TaggedEntry
 {
   public:
+    int cpuId = -116;
+    bool fromNetwork = false;
     /**
      * Cache block's enum listing the supported coherence bits. The valid
      * bit is not defined here because it is part of a TaggedEntry.
