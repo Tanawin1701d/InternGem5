@@ -76,6 +76,9 @@ namespace memory
  */
 class MemInterface : public AbstractMemory
 {
+
+  friend class gem5::mySchedule::myScheduler;
+
   protected:
     /**
      * A basic class to track the bank state, i.e. what row is
@@ -228,7 +231,6 @@ class MemInterface : public AbstractMemory
      */
     virtual std::pair<MemPacketQueue::iterator, Tick>
     chooseNextFRFCFS(MemPacketQueue& queue, Tick min_col_at) const = 0;
-
     /*
      * Function to calulate unloaded latency
      */
@@ -948,6 +950,9 @@ class DRAMInterface : public MemInterface
      */
     std::pair<MemPacketQueue::iterator, Tick>
     chooseNextFRFCFS(MemPacketQueue& queue, Tick min_col_at) const override;
+
+    std::pair<MemPacketQueue::iterator, Tick>
+    chooseFNFRFCFS(MemPacketQueue& queue, Tick min_col_at, bool src) ;
 
     MemPacketQueue::iterator
     chooseNextFCFSNRE(MemPacketQueue& queue) const;

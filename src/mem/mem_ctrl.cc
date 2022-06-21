@@ -101,6 +101,7 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
               p.write_high_thresh_perc);
 
     myShed->owner = this;
+    myShed->dram  = dram;
 }
 
 void
@@ -285,7 +286,7 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             stats.rdQLenPdf[totalReadQueueSize + respQueue.size()]++;
 
             DPRINTF(MemCtrl, "Adding to read queue\n");
-
+            assert(mem_pkt->pkt->req != nullptr);
             readQueue[mem_pkt->qosValue()].push_back(mem_pkt);
 
             // log packet
@@ -315,6 +316,15 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
     if (!nextReqEvent.scheduled()) {
         DPRINTF(MemCtrl, "Request scheduled immediately\n");
         schedule(nextReqEvent, curTick());
+    }
+
+    for (auto queue = readQueue.rbegin();
+             queue != readQueue.rend(); ++queue) {
+            // If we are changing command type, incorporate the minimum
+            // bus turnaround delay
+            for (auto iter = queue->begin(); iter != queue->end(); ++iter) {
+                    assert(((*iter)->pkt->req) != nullptr);
+            }
     }
 }
 
@@ -358,7 +368,8 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             stats.wrQLenPdf[totalWriteQueueSize]++;
 
             DPRINTF(MemCtrl, "Adding to write queue\n");
-
+            
+            assert(mem_pkt->pkt->req != nullptr);
             writeQueue[mem_pkt->qosValue()].push_back(mem_pkt);
             isInWriteQueue.insert(burstAlign(addr, is_dram));
 
@@ -389,14 +400,28 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
     // snoop the write queue for any upcoming reads
     // @todo, if a pkt size is larger than burst size, we might need a
     // different front end latency
+    assert(pkt->req != nullptr);
     accessAndRespond(pkt, frontendLatency);
-
+    assert(pkt->req != nullptr);
     // If we are not already scheduled to get a request out of the
     // queue, do so now
     if (!nextReqEvent.scheduled()) {
         DPRINTF(MemCtrl, "Request scheduled immediately\n");
         schedule(nextReqEvent, curTick());
     }
+
+    //pkt->print()
+
+
+    for (auto queue = writeQueue.rbegin();
+             queue != writeQueue.rend(); ++queue) {
+            // If we are changing command type, incorporate the minimum
+            // bus turnaround delay
+            for (auto iter = queue->begin(); iter != queue->end(); ++iter) {
+                    assert(((*iter)->pkt->req) != nullptr);
+            }
+    }
+
 }
 
 void
@@ -437,13 +462,17 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
     panic_if(!(pkt->isRead() || pkt->isWrite()),
              "Should only see read and writes at memory controller\n");
 
-
+    /////////////////////////////////////////////////////////////////////////
      if (pkt->req->fromNetwork){
                 DPRINTF(passingTest,  "this come from network=============== %d\n", pkt->req->cpuId );
-            }else{
+    }else{
                 DPRINTF(passingTest,  "this come from cpuid  %d\n", pkt->req->cpuId );
-            }
+    }
 
+    assert(pkt->req);
+    pkt->fromNetwork = pkt->req->fromNetwork;
+    pkt->cpuId = pkt->req->cpuId;    
+    ///////////////////////////////////////////////////////////////////////////
     // Calc avg gap between requests
     if (prevArrival != 0) {
         stats.totGap += curTick() - prevArrival;
@@ -601,8 +630,12 @@ MemCtrl::chooseNext(MemPacketQueue& queue, Tick extra_col_delay)
             ret = chooseNextFRFCFS(queue, extra_col_delay);
         } else if ( memSchedPolicy == enums::fcfsNR ){
             ret = dram->chooseNextFCFSNRE(queue);
-        } else if ( memSchedPolicy == enums::myScheduler){
+        } else if ( memSchedPolicy == enums::rr){
             ret = myShed->chooseRoundRubin(queue);
+        } else if (memSchedPolicy == enums::fnfrfcfs){
+            ret = myShed->chooseFNFRFCFS(queue, 
+                                        std::max(nextBurstAt + extra_col_delay, curTick())
+                                        );
         }else {
             panic("No scheduling policy chosen\n");
         }
@@ -890,6 +923,9 @@ MemCtrl::doBurstAccess(MemPacket* mem_pkt)
 void
 MemCtrl::processNextReqEvent()
 {
+    
+
+
     // transition is handled by QoS algorithm if enabled
     if (turnPolicy) {
         // select bus state - only done if QoS algorithms are in use
@@ -1005,6 +1041,10 @@ MemCtrl::processNextReqEvent()
                         "Checking READ queue [%d] priority [%d elements]\n",
                         prio, queue->size());
 
+                for (auto iter = queue->begin(); iter != queue->end(); ++iter) {
+                    assert(((*iter)->pkt->req) != nullptr);
+                }
+
                 // Figure out which read request goes next
                 // If we are changing command type, incorporate the minimum
                 // bus turnaround delay which will be rank to rank delay
@@ -1093,6 +1133,11 @@ MemCtrl::processNextReqEvent()
 
             // If we are changing command type, incorporate the minimum
             // bus turnaround delay
+            for (auto iter = queue->begin(); iter != queue->end(); ++iter) {
+                    assert(((*iter)->pkt->req) != nullptr);
+                }
+
+
             to_write = chooseNext((*queue),
                      switched_cmd_type ? minReadToWriteDataGap() : 0);
 

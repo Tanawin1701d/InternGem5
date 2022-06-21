@@ -285,6 +285,8 @@ class Packet : public Printable
   public:
     typedef uint32_t FlagsType;
     typedef gem5::Flags<FlagsType> Flags;
+    bool    fromNetwork = false;
+    int     cpuId       = -1;
 
   private:
     enum : FlagsType

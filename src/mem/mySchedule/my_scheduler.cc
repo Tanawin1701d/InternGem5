@@ -97,8 +97,14 @@ namespace mySchedule
         }
     }
 
-
-
+    gem5::memory::MemPacketQueue::iterator
+    myScheduler::chooseFNFRFCFS(gem5::memory::MemPacketQueue& queue, Tick min_col_at){
+        gem5::memory::MemPacketQueue::iterator ret = queue.end();
+        ret = dram->chooseFNFRFCFS(queue, min_col_at, true).first;
+        if (ret != queue.end())
+            return ret;
+        return dram->chooseFNFRFCFS(queue, min_col_at, false).first;
+    }
 }
 }
 
