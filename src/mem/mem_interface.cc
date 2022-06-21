@@ -46,6 +46,7 @@
 #include "debug/DRAM.hh"
 #include "debug/DRAMPower.hh"
 #include "debug/DRAMState.hh"
+#include "debug/passingTest.hh"
 #include "debug/NVM.hh"
 #include "sim/system.hh"
 
@@ -291,88 +292,229 @@ DRAMInterface::chooseNextFRFCFS(MemPacketQueue& queue, Tick min_col_at) const
 
 std::pair<MemPacketQueue::iterator, Tick>
 DRAMInterface::chooseFNFRFCFS(MemPacketQueue& queue, Tick min_col_at, bool src) {
-        
-            bool found_row_hit_not_seam = false;
-            bool found_not_row_but_seam = false;
-            bool found_not_row_not_seam = false;
+        {
+            // bool found_row_hit_not_seam = false;
+            // bool found_not_row_but_seam = false;
+            // bool found_not_row_not_seam = false;
 
-            bool filled_seam               = false;
-            MemPacketQueue specQ;
-            DPRINTF(DRAM, "prepass specq\n");
+            // bool filled_seam               = false;
+            // MemPacketQueue specQ;
+            // DPRINTF(DRAM, "prepass specq\n");
             
-             //min bank prep///////////////////////////////////////////////////
-             for (auto iter  = queue.begin(); iter != queue.end(); iter++){
-                 DPRINTF(DRAM, "request pre rise\n ");
-                    //panic("error %s",(*iter)->pkt->print());
-                    assert((*iter)->pkt);
-                    assert((*iter)->pkt->req);
-                    DPRINTF(DRAM, "request rise\n ");
-                 //if ((*iter)->pkt->req->fromNetwork == src){
-                    //specQ.push_back(*iter);
-                 //}
-                 
-             }
-            DPRINTF(DRAM, "pass specq\n");
+            //  //min bank prep///////////////////////////////////////////////////
+            //  for (auto iter  = queue.begin(); iter != queue.end(); iter++){
+            //      int  cpuId       = (*iter)->pkt->cpuId;
+            //      bool fromNetwork = (*iter)->pkt->fromNetwork;
+            //      //if (fromNetwork == src){
+            //         specQ.push_back(*iter);
+            //      //}
+            //  }
+            // DPRINTF(DRAM, "pass specq\n");
 
-            /////////////////////////////////////////////////////////////////////
-            std::vector<uint32_t> earliest_banks(ranksPerChannel, 0);
-            Tick selected_col_at = MaxTick;
-            auto selected_pkt_it = queue.end();
-            std::tie(earliest_banks, filled_seam) = minBankPrep(queue, min_col_at);
-            DPRINTF(DRAM, "pass minbankprep\n");
-            //////////////////////////////////////////////////////
-            // 1.row hit seamless first
-            // 2.row not hit seamless first
-            // 3.row hit not seamless first
-            // 4.row not hit not seamless first 
-            /////////////////////////////////////////////////////
-            for (auto iter = queue.begin(); iter != queue.end(); iter++){
-                DPRINTF(DRAM, "pass iter\n");
+            // /////////////////////////////////////////////////////////////////////
+            // std::vector<uint32_t> earliest_banks(ranksPerChannel, 0);
+            // Tick selected_col_at = MaxTick;
+            // auto selected_pkt_it = queue.end();
+            // std::tie(earliest_banks, filled_seam) = minBankPrep(queue, min_col_at);
+            // DPRINTF(DRAM, "pass minbankprep\n");
+            // //////////////////////////////////////////////////////
+            // // 1.row hit seamless first
+            // // 2.row not hit seamless first
+            // // 3.row hit not seamless first
+            // // 4.row not hit not seamless first 
+            // /////////////////////////////////////////////////////
+            // for (auto iter = queue.begin(); iter != queue.end(); iter++){
+            //     DPRINTF(DRAM, "pass iter\n");
 
-                // current packet information unpack;
-                MemPacket* mpkt = *iter;
-                //bool  curSrc                 = mpkt->pkt->req->fromNetwork;
-                // check packet is for dram and this packet is correct source
-                if (mpkt->isDram() && burstReady(mpkt)/* && mpkt->pkt->fromNetwork */){
-                    //assert(mpkt->pkt->cpuId != -1);
-                    // current packet information unpack;
-                    const Bank& bank          = ranks[mpkt->rank]->banks[mpkt->bank];
-                    const Tick col_allowed_at = mpkt->isRead() ? bank.rdAllowedAt :
-                                                                 bank.wrAllowedAt;
-                    //row hit seamless first
-                    if (bank.openRow == mpkt->row){
-                        if (col_allowed_at <= min_col_at){
-                            selected_col_at = col_allowed_at;
-                            selected_pkt_it = iter;
-                            break;
-                        }else if (!found_row_hit_not_seam && !found_not_row_but_seam){
+            //     // current packet information unpack;
+            //     MemPacket* mpkt = *iter;
+            //     //bool  curSrc                 = mpkt->pkt->req->fromNetwork;
+            //     // check packet is for dram and this packet is correct source
+            //     if (mpkt->isDram() && burstReady(mpkt) && (mpkt->pkt->fromNetwork == src)){
+            //         //assert(mpkt->pkt->cpuId != -1);
+            //         // current packet information unpack;
+            //         const Bank& bank          = ranks[mpkt->rank]->banks[mpkt->bank];
+            //         const Tick col_allowed_at = mpkt->isRead() ? bank.rdAllowedAt :
+            //                                                      bank.wrAllowedAt;
+            //         //row hit seamless first
+            //         if (bank.openRow == mpkt->row){
+            //             if (col_allowed_at <= min_col_at){
+            //                 selected_col_at = col_allowed_at;
+            //                 selected_pkt_it = iter;
+            //                 break;
+            //             }else if (!found_row_hit_not_seam && !found_not_row_but_seam){
 
-                            selected_col_at         = col_allowed_at;
-                            selected_pkt_it         = iter;
-                            found_row_hit_not_seam  = true;
-                        }
-                    }else if (!found_not_row_not_seam){
+            //                 selected_col_at         = col_allowed_at;
+            //                 selected_pkt_it         = iter;
+            //                 found_row_hit_not_seam  = true;
+            //             }
+            //         }else if (!found_not_row_not_seam){
 
-                        if (bits(earliest_banks[mpkt->rank], 
-                                        mpkt->bank, 
-                                        mpkt->bank)){
+            //             if (bits(earliest_banks[mpkt->rank], 
+            //                             mpkt->bank, 
+            //                             mpkt->bank)){
                         
-                            found_not_row_not_seam = true;
-                            found_not_row_but_seam = filled_seam;
+            //                 found_not_row_not_seam = true;
+            //                 found_not_row_but_seam = filled_seam;
 
-                            if (found_not_row_but_seam || !found_row_hit_not_seam){
-                                selected_pkt_it         = iter;
-                                selected_col_at         = col_allowed_at;
-                            }
-                        }
-                    }
+            //                 if (found_not_row_but_seam || !found_row_hit_not_seam){
+            //                     selected_pkt_it         = iter;
+            //                     selected_col_at         = col_allowed_at;
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+
+            // return std::make_pair(selected_pkt_it, selected_col_at);
+
+            // return chooseNextFRFCFS(queue, min_col_at);
+
+
+    // std::vector<uint32_t> earliest_banks(ranksPerChannel, 0);
+
+    // // Has minBankPrep been called to populate earliest_banks?
+    // bool filled_earliest_banks = false;
+    // // can the PRE/ACT sequence be done without impacting utlization?
+    // bool hidden_bank_prep = false;
+
+    // // search for seamless row hits first, if no seamless row hit is
+    // // found then determine if there are other packets that can be issued
+    // // without incurring additional bus delay due to bank timing
+    // // Will select closed rows first to enable more open row possibilies
+    // // in future selections
+    // bool found_hidden_bank = false;
+
+    // // remember if we found a row hit, not seamless, but bank prepped
+    // // and ready
+    // bool found_prepped_pkt = false;
+
+    // // if we have no row hit, prepped or not, and no seamless packet,
+    // // just go for the earliest possible
+    // bool found_earliest_pkt = false;
+
+    // Tick selected_col_at = MaxTick;
+    // auto selected_pkt_it = queue.end();
+
+    // MemPacketQueue specQ;
+    // for (auto iter  = queue.begin(); iter != queue.end(); iter++){
+    //       int  cpuId       = (*iter)->pkt->cpuId;
+    //       bool fromNetwork = (*iter)->pkt->fromNetwork;
+    //         if (fromNetwork == src){
+    //          specQ.push_back(*iter);
+    //         }
+    // }
+
+    // std::tie(earliest_banks, hidden_bank_prep) =
+    //                         minBankPrep(specQ, min_col_at);
+
+    // for (auto i = queue.begin(); i != queue.end() ; ++i) {
+    //     MemPacket* pkt = *i;
+
+    //     // select optimal DRAM packet in Q
+    //     if (pkt->isDram()) {
+    //         const Bank& bank = ranks[pkt->rank]->banks[pkt->bank];
+    //         const Tick col_allowed_at = pkt->isRead() ? bank.rdAllowedAt :
+    //                                                     bank.wrAllowedAt;
+
+    //         DPRINTF(DRAM, "%s checking DRAM packet in bank %d, row %d\n",
+    //                 __func__, pkt->bank, pkt->row);
+
+    //         // check if rank is not doing a refresh and thus is available,
+    //         // if not, jump to the next packet
+
+    //         if (burstReady(pkt) && (src == pkt->pkt->fromNetwork)) {
+    //             DPRINTF(passingTest, "net work is in coonsider\n");        
+    //             DPRINTF(DRAM,
+    //                     "%s bank %d - Rank %d available\n", __func__,
+    //                     pkt->bank, pkt->rank);
+
+    //             // check if it is a row hit
+    //             if (bank.openRow == pkt->row) {
+    //                 // no additional rank-to-rank or same bank-group
+    //                 // delays, or we switched read/write and might as well
+    //                 // go for the row hit
+    //                 if (col_allowed_at <= min_col_at) {
+    //                     // FCFS within the hits, giving priority to
+    //                     // commands that can issue seamlessly, without
+    //                     // additional delay, such as same rank accesses
+    //                     // and/or different bank-group accesses
+    //                     DPRINTF(DRAM, "%s Seamless buffer hit\n", __func__);
+    //                     selected_pkt_it = i;
+    //                     selected_col_at = col_allowed_at;
+    //                     // no need to look through the remaining queue entries
+    //                     break;
+    //                 } else if (!found_hidden_bank && !found_prepped_pkt) {
+    //                     // if we did not find a packet to a closed row that can
+    //                     // issue the bank commands without incurring delay, and
+    //                     // did not yet find a packet to a prepped row, remember
+    //                     // the current one
+    //                     selected_pkt_it = i;
+    //                     selected_col_at = col_allowed_at;
+    //                     found_prepped_pkt = true;
+    //                     DPRINTF(DRAM, "%s Prepped row buffer hit\n", __func__);
+    //                 }
+    //             } else if (!found_earliest_pkt) {
+    //                 // if we have not initialised the bank status, do it
+    //                 // now, and only once per scheduling decisions
+    //                 if (!filled_earliest_banks) {
+    //                     // determine entries with earliest bank delay
+    //                 /*std::tie(earliest_banks, hidden_bank_prep) =
+    //                         minBankPrep(queue, min_col_at);
+    //                 */
+    //                     filled_earliest_banks = true;
+    //                 }
+
+    //                 // bank is amongst first available banks
+    //                 // minBankPrep will give priority to packets that can
+    //                 // issue seamlessly
+    //                 if (bits(earliest_banks[pkt->rank],
+    //                          pkt->bank, pkt->bank)) {
+    //                     found_earliest_pkt = true;
+    //                     found_hidden_bank = hidden_bank_prep;
+
+    //                     // give priority to packets that can issue
+    //                     // bank commands 'behind the scenes'
+    //                     // any additional delay if any will be due to
+    //                     // col-to-col command requirements
+    //                     if (hidden_bank_prep || !found_prepped_pkt) {
+    //                         selected_pkt_it = i;
+    //                         selected_col_at = col_allowed_at;
+    //                     }
+    //                 }
+    //             }
+    //         } else {
+    //             DPRINTF(DRAM, "%s bank %d - Rank %d not available\n", __func__,
+    //                     pkt->bank, pkt->rank);
+    //         }
+    //     }
+    // }
+
+    // if (selected_pkt_it == queue.end()) {
+    //     DPRINTF(DRAM, "%s no available DRAM ranks found\n", __func__);
+    // }
+
+    // return std::make_pair(selected_pkt_it, selected_col_at);
+            }
+    
+        
+        
+        MemPacketQueue::iterator ret = queue.end();
+        bool found_cpu_req = false;
+
+        for (auto iter = queue.begin(); iter != queue.end(); iter++){
+            MemPacket* mpkt = *iter;
+            if ( mpkt->isDram() && burstReady(mpkt) ){
+                bool fromNetwork = mpkt->pkt->fromNetwork;
+                if(fromNetwork){
+                    return {iter, MaxTick};
+                }else if (!found_cpu_req){
+                ret = iter;
+                found_cpu_req = true;
                 }
             }
-
-            return std::make_pair(selected_pkt_it, selected_col_at);
-
-            return chooseNextFRFCFS(queue, min_col_at);
-
+        }
+        return {ret, MaxTick};    
     }
 
 

@@ -286,7 +286,6 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             stats.rdQLenPdf[totalReadQueueSize + respQueue.size()]++;
 
             DPRINTF(MemCtrl, "Adding to read queue\n");
-            assert(mem_pkt->pkt->req != nullptr);
             readQueue[mem_pkt->qosValue()].push_back(mem_pkt);
 
             // log packet
@@ -318,14 +317,7 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
         schedule(nextReqEvent, curTick());
     }
 
-    for (auto queue = readQueue.rbegin();
-             queue != readQueue.rend(); ++queue) {
-            // If we are changing command type, incorporate the minimum
-            // bus turnaround delay
-            for (auto iter = queue->begin(); iter != queue->end(); ++iter) {
-                    assert(((*iter)->pkt->req) != nullptr);
-            }
-    }
+
 }
 
 void
@@ -400,9 +392,7 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
     // snoop the write queue for any upcoming reads
     // @todo, if a pkt size is larger than burst size, we might need a
     // different front end latency
-    assert(pkt->req != nullptr);
     accessAndRespond(pkt, frontendLatency);
-    assert(pkt->req != nullptr);
     // If we are not already scheduled to get a request out of the
     // queue, do so now
     if (!nextReqEvent.scheduled()) {
@@ -410,17 +400,6 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
         schedule(nextReqEvent, curTick());
     }
 
-    //pkt->print()
-
-
-    for (auto queue = writeQueue.rbegin();
-             queue != writeQueue.rend(); ++queue) {
-            // If we are changing command type, incorporate the minimum
-            // bus turnaround delay
-            for (auto iter = queue->begin(); iter != queue->end(); ++iter) {
-                    assert(((*iter)->pkt->req) != nullptr);
-            }
-    }
 
 }
 
@@ -1041,9 +1020,6 @@ MemCtrl::processNextReqEvent()
                         "Checking READ queue [%d] priority [%d elements]\n",
                         prio, queue->size());
 
-                for (auto iter = queue->begin(); iter != queue->end(); ++iter) {
-                    assert(((*iter)->pkt->req) != nullptr);
-                }
 
                 // Figure out which read request goes next
                 // If we are changing command type, incorporate the minimum
@@ -1133,9 +1109,7 @@ MemCtrl::processNextReqEvent()
 
             // If we are changing command type, incorporate the minimum
             // bus turnaround delay
-            for (auto iter = queue->begin(); iter != queue->end(); ++iter) {
-                    assert(((*iter)->pkt->req) != nullptr);
-                }
+
 
 
             to_write = chooseNext((*queue),
