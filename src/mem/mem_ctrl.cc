@@ -286,6 +286,14 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             stats.rdQLenPdf[totalReadQueueSize + respQueue.size()]++;
 
             DPRINTF(MemCtrl, "Adding to read queue\n");
+
+            mem_pkt->fromNetwork = mem_pkt->pkt->req->fromNetwork;
+            mem_pkt->cpuId = mem_pkt->pkt->req->cpuId;
+            if (mem_pkt->fromNetwork){
+                stats.mempktNetwork++;
+            } else {
+                stats.mempktCpu++;
+            }
             readQueue[mem_pkt->qosValue()].push_back(mem_pkt);
 
             // log packet
@@ -362,6 +370,15 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             DPRINTF(MemCtrl, "Adding to write queue\n");
             
             assert(mem_pkt->pkt->req != nullptr);
+            mem_pkt->fromNetwork = mem_pkt->pkt->req->fromNetwork;
+            mem_pkt->cpuId = mem_pkt->pkt->req->cpuId;
+
+            if (mem_pkt->fromNetwork){
+                stats.mempktNetwork++;
+            } else {
+                stats.mempktCpu++;
+            }
+
             writeQueue[mem_pkt->qosValue()].push_back(mem_pkt);
             isInWriteQueue.insert(burstAlign(addr, is_dram));
 
@@ -444,8 +461,10 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
     /////////////////////////////////////////////////////////////////////////
      if (pkt->req->fromNetwork){
                 DPRINTF(passingTest,  "this come from network=============== %d\n", pkt->req->cpuId );
+                stats.network++;
     }else{
                 DPRINTF(passingTest,  "this come from cpuid  %d\n", pkt->req->cpuId );
+                stats.cpu++;
     }
 
     assert(pkt->req);
@@ -1316,7 +1335,12 @@ MemCtrl::CtrlStats::CtrlStats(MemCtrl &_ctrl)
              "Per-requestor read average memory access latency"),
     ADD_STAT(requestorWriteAvgLat, statistics::units::Rate<
                 statistics::units::Tick, statistics::units::Count>::get(),
-             "Per-requestor write average memory access latency")
+             "Per-requestor write average memory access latency"),
+    ADD_STAT(network, statistics::units::Count::get(), "amount of network packets in memory ctrl"),
+    ADD_STAT(cpu, statistics::units::Count::get(), "amount of cpu packets in memory ctrl"),
+    ADD_STAT(mempktNetwork,statistics::units::Count::get(), "amount of packet that come from network which split to mempkt"),
+    ADD_STAT(mempktCpu,statistics::units::Count::get(), "amount of packet that come from cpu which split to mempkt")
+           
 {
 }
 

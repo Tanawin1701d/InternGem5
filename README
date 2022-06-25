@@ -41,3 +41,41 @@ https://gem5.googlesource.com/public/gem5-resources/
 If you have questions, please send mail to gem5-users@gem5.org
 
 Enjoy using gem5 and please share your modifications and extensions.
+
+
+
+build/X86/gem5.opt  --debug-flags=scheduler configs/learning_gem5/newBench.py \
+ --cmd="/home/tanawin/Work/Hwsim/sniper/benchmarks/splash2/splash2/codes/apps/barnes/BARNES;/home/tanawin/Work/Hwsim/sniper/benchmarks/splash2/splash2/codes/apps/barnes/BARNES" \
+ --input="/home/tanawin/Work/Hwsim/sniper/benchmarks/splash2/splash2/codes/apps/barnes/input;/home/tanawin/Work/Hwsim/sniper/benchmarks/splash2/splash2/codes/apps/barnes/input" \
+ --cpu-type=TimingSimpleCPU --l1d_size=64kB --l1i_size=16kB -n 2
+ 
+ build/X86/gem5.opt  --debug-flags=scheduler configs/learning_gem5/newBench.py \
+ --cmd="/home/tanawin/Work/Hwsim/sniper/benchmarks/splash2/splash2/codes/apps/barnes/BARNES;/home/tanawin/Work/Hwsim/sniper/benchmarks/splash2/splash2/codes/apps/barnes/BARNES" \
+ --input="/home/tanawin/Work/Hwsim/sniper/benchmarks/splash2/splash2/codes/apps/barnes/input;/home/tanawin/Work/Hwsim/sniper/benchmarks/splash2/splash2/codes/apps/barnes/input" \
+ --cpu-type=TimingSimpleCPU --l1d_size=64kB --l1i_size=16kB -n 2
+ 
+ 
+ 
+ 
+ build/X86/gem5.opt  --debug-flags=scheduler configs/example/se.py --cmd="/bin/ls;/bin/ls;/bin/ls" --cpu-type=TimingSimpleCPU --l1d_size=64kB --l1i_size=16kB -n 3
+ 
+ 
+ 
+ build/X86/gem5.opt  --debug-flags=scheduler configs/learning_gem5/newBench.py --cmd="tests/test-progs/hello/bin/x86/linux/hello;tests/test-progs/hello/bin/x86/linux/hello" --cpu-type=TimingSimpleCPU --l1d_size=64kB --l1i_size=16kB -n 1
+ 
+ 
+ 
+ 
+ 
+ 
+build/X86/gem5.opt  --debug-flags=scheduler configs/learning_gem5/newBench.py --cmd="tests/test-progs/threadHello/FFT;tests/test-progs/threadHello/FFT;tests/test-progs/threadHello/FFT" --cpu-type=TimingSimpleCPU --l1d_size=64kB --l1i_size=16kB -n 3 --memSched=frfcfs
+
+
+build/X86/gem5.opt  --debug-flags=scheduler configs/learning_gem5/newBench.py --cmd="tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;" --cpu-type=TimingSimpleCPU --l1d_size=64kB --l1i_size=16kB -n 3 --memSched=frfcfs
+
+build/X86/gem5.opt  --debug-flags=scheduler configs/learning_gem5/newBench.py --cmd="tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;" --cpu-type=TimingSimpleCPU --l1d_size=64kB --l1i_size=16kB -n 4 --memSched=frfcfs
+
+
+build/X86/gem5.opt  --debug-flags=scheduler configs/learning_gem5/newBench.py --cmd="tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;tests/test-progs/threadHello/FFT;" --cpu-type=TimingSimpleCPU --l1d_size=64kB --l1i_size=16kB -n 4 --memSched=fcfs
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+build/X86/gem5.opt  --debug-flags=scheduler configs/learning_gem5/newBench.py --cmd="tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;" --cpu-type=TimingSimpleCPU --l1d_size=1kB --l1i_size=1kB -n 4 --memSched=fcfs

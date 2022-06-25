@@ -40,7 +40,7 @@ namespace mySchedule
             gem5::memory::MemPacket* memPkt = *memIter;
             //context  id
              
-            CPUINDEXParam cpr = memPkt->pkt->req->cpuId;
+            CPUINDEXParam cpr = memPkt->cpuId;
 
             // if (memPkt->pkt->fromNetwork){
             //     DPRINTF(passingTest,  "this come from network=============== %d\n", cpr );

@@ -370,7 +370,8 @@ Queued::createPrefetchRequest(Addr addr, PrefetchInfo const &pfi,
 {
     RequestPtr translation_req = std::make_shared<Request>(
             addr, blkSize, pkt->req->getFlags(), requestorId, pfi.getPC(),
-            pkt->req->contextId(), nullptr, -112);
+            pkt->req->contextId(), nullptr, pkt->req->cpuId);
+            translation_req->fromNetwork = pkt->req->fromNetwork;
     translation_req->setFlags(Request::PREFETCH);
     return translation_req;
 }

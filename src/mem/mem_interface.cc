@@ -48,6 +48,7 @@
 #include "debug/DRAMState.hh"
 #include "debug/passingTest.hh"
 #include "debug/NVM.hh"
+#include "debug/scheduler.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -497,24 +498,105 @@ DRAMInterface::chooseFNFRFCFS(MemPacketQueue& queue, Tick min_col_at, bool src) 
     // return std::make_pair(selected_pkt_it, selected_col_at);
             }
     
-        
-        
         MemPacketQueue::iterator ret = queue.end();
-        bool found_cpu_req = false;
 
+        bool found_network    = false;
+        bool found_network_rh = false;
+
+        bool found_cpu_req_rh = false;
+        bool found_cpu_req    = false;
+
+        bool maskForNw        = false;
+
+        int cnw = 0;
+        int ccpu = 0;
+        ////////////// for check min bank prep
+        std::vector<uint32_t> NetworkEariest(ranksPerChannel, 0);
+        MemPacketQueue Networkqueue;
+        bool           netseam = false;
+        std::vector<uint32_t> CpuEariest    (ranksPerChannel, 0);
+        MemPacketQueue Cpuqueue;
+        bool           cpuseam = false;  
+        /////////////////////////////////////////////////////////////////////
+        // process for minbank prep
         for (auto iter = queue.begin(); iter != queue.end(); iter++){
             MemPacket* mpkt = *iter;
+            if (mpkt->fromNetwork){
+                Networkqueue.push_back(mpkt);
+            }else{
+                Cpuqueue.push_back(mpkt);
+            }
+        }
+
+        std::tie(NetworkEariest, netseam) = minBankPrep(Networkqueue, min_col_at);
+        std::tie(CpuEariest    , cpuseam) = minBankPrep(Cpuqueue    , min_col_at);
+        ///// end of process min bank prep teacher
+        //////////////////////////////////////////////////////////////////////
+        for (auto iter = queue.begin(); iter != queue.end(); iter++){
+            MemPacket* mpkt = *iter;
+            if (mpkt->fromNetwork){
+                 maskForNw = true;
+                 cnw++;
+            }else{
+                 ccpu++;
+            }
+            
+             
             if ( mpkt->isDram() && burstReady(mpkt) ){
-                bool fromNetwork = mpkt->pkt->fromNetwork;
+
+                const Bank& bank = ranks[mpkt->rank]->banks[mpkt->bank];
+                const Tick col_allowed_at = mpkt->isRead() ? bank.rdAllowedAt :
+                                                            bank.wrAllowedAt;
+                bool fromNetwork = mpkt->fromNetwork;
+
                 if(fromNetwork){
-                    return {iter, MaxTick};
-                }else if (!found_cpu_req){
-                ret = iter;
-                found_cpu_req = true;
+                    if ((bank.openRow == mpkt->row) && (!found_network_rh)){
+                        ret = iter;
+                        found_network_rh = true;
+                        found_network    = true;
+                    }else if (!found_network){
+                        
+                        if (bits(NetworkEariest[mpkt->rank], mpkt->bank, mpkt->bank)){
+                            ret              = iter;
+                            found_network    = true;
+                        }
+
+
+                    }
+
+                }else if (!found_network){
+
+                    if ((bank.openRow == mpkt->row) && !found_cpu_req_rh){
+                        ret = iter;
+                        found_cpu_req = true;
+                        found_cpu_req_rh = true;
+                    }else if (!found_cpu_req){
+
+
+                        if (bits(CpuEariest[mpkt->rank], mpkt->bank, mpkt->bank)){
+                            ret = iter;
+                            found_cpu_req = true;
+                        }
+
+
+                    }
                 }
             }
         }
-        return {ret, MaxTick};    
+
+        if (found_network){
+            DPRINTF(scheduler,"Now we schedule to network first %d nw : %d cpu\n",cnw, ccpu );
+            stats.networkPack++;
+            return {ret, MaxTick};
+        }else if(!maskForNw && found_cpu_req) {
+            DPRINTF(scheduler,"Now we schedule to cpu first %d nw : %d cpu\n",cnw, ccpu);
+            stats.cpuPack++;
+            return {ret, MaxTick};
+        }
+
+        return {queue.end(), MaxTick};
+
+            
     }
 
 
@@ -2156,7 +2238,9 @@ DRAMInterface::DRAMStats::DRAMStats(DRAMInterface &_dram)
              "Data bus utilization in percentage for writes"),
 
     ADD_STAT(pageHitRate, statistics::units::Ratio::get(),
-             "Row buffer hit rate, read and write combined")
+             "Row buffer hit rate, read and write combined"),
+    ADD_STAT(networkPack, statistics::units::Count::get(), "amount of network packets"),
+    ADD_STAT(cpuPack, statistics::units::Count::get(), "amount of cpu packets")
 
 {
 }

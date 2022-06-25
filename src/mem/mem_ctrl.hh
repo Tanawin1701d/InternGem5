@@ -98,6 +98,8 @@ class MemPacket
 {
   public:
 
+    int cpuId = -1;
+    bool fromNetwork = false;
     /** When did request enter the controller */
     const Tick entryTime;
 
@@ -538,7 +540,6 @@ class MemCtrl : public qos::MemCtrl
         void regStats() override;
 
         MemCtrl &ctrl;
-
         // All statistics that the model needs to capture
         statistics::Scalar readReqs;
         statistics::Scalar writeReqs;
@@ -589,6 +590,13 @@ class MemCtrl : public qos::MemCtrl
         // per-requestor raed and write average memory access latency
         statistics::Formula requestorReadAvgLat;
         statistics::Formula requestorWriteAvgLat;
+        
+        statistics::Scalar network;
+        statistics::Scalar cpu;
+
+        statistics::Scalar mempktNetwork;
+        statistics::Scalar mempktCpu;
+
     };
 
     CtrlStats stats;

@@ -821,6 +821,9 @@ class DRAMInterface : public MemInterface
         statistics::Scalar readBursts;
         statistics::Scalar writeBursts;
 
+        statistics::Scalar networkPack;
+        statistics::Scalar cpuPack;
+
         /** DRAM per bank stats */
         statistics::Vector perBankRdBursts;
         statistics::Vector perBankWrBursts;
