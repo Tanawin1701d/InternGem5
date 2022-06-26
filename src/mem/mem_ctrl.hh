@@ -55,6 +55,7 @@
 #include "base/callback.hh"
 #include "base/statistics.hh"
 #include "enums/MemSched.hh"
+#include "enums/iterQSched.hh"
 #include "mem/qos/mem_ctrl.hh"
 #include "mem/qport.hh"
 #include "params/MemCtrl.hh"
@@ -69,6 +70,7 @@ namespace memory
 class DRAMInterface;
 class NVMInterface;
 class gem5::mySchedule::myScheduler;
+class InterQueue;
 /**
  * A burst helper helps organize and manage a packet that is larger than
  * the memory burst size. A system packet that is larger than the burst size
@@ -496,8 +498,8 @@ class MemCtrl : public qos::MemCtrl
      * Memory controller configuration initialized based on parameter
      * values.
      */
-    enums::MemSched memSchedPolicy;
-
+    enums::MemSched    memSchedPolicy;
+    enums::iterQSched  iterQSchedPolicy;
     /**
      * Pipeline latency of the controller frontend. The frontend
      * contribution is added to writes (that complete when they are in
@@ -624,6 +626,7 @@ class MemCtrl : public qos::MemCtrl
     void pruneBurstTick();
 
     gem5::mySchedule::myScheduler* myShed;
+    InterQueue* iterSched;
 
   public:
 

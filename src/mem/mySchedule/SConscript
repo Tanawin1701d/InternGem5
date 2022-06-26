@@ -1,8 +1,12 @@
 Import('*')
 
 SimObject('myScheduler.py', sim_objects=['myScheduler'])
+SimObject('InterQueue.py', sim_objects=['InterQueue']) #, enums=['iterQSched'])
+
 
 Source('my_scheduler.cc')
+Source('inter_queue.cc')
+
 
 DebugFlag('scheduler')
 DebugFlag('passingTest')

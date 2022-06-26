@@ -79,7 +79,9 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
     nextBurstAt(0), prevArrival(0),
     nextReqTime(0),
     stats(*this),
-    myShed(p.mySchedObj)
+    myShed(p.mySchedObj),//,
+    iterQSchedPolicy(p.inter_QSched_policy),
+    iterSched(p.iterSched)
 
 {
     DPRINTF(MemCtrl, "Setting up controller\n");

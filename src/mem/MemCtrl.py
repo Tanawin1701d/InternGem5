@@ -40,12 +40,16 @@
 
 from m5.params import *
 from m5.proxy import *
-from m5.objects.QoSMemCtrl import *
+from m5.objects.QoSMemCtrl  import *
 from m5.objects.myScheduler import *
+from m5.objects.InterQueue  import *
+#from m5.objects.iterQSched  import * 
 
 # Enum for memory scheduling algorithms, currently First-Come
 # First-Served and a First-Row Hit then First-Come First-Served
-class MemSched(Enum): vals = ['fcfs', 'frfcfs', 'fcfsNR', 'rr', 'fnfrfcfs']
+class MemSched(Enum)  : vals = ['fcfs', 'frfcfs', 'fcfsNR', 'rr', 'fnfrfcfs']
+class iterQSched(Enum): vals = ['single']
+
 
 # MemCtrl is a single-channel single-ported Memory controller model
 # that aims to model the most important system-level performance
@@ -82,7 +86,8 @@ class MemCtrl(QoSMemCtrl):
                                            "switching to reads")
 
     # scheduler, address map and page policy
-    mem_sched_policy = Param.MemSched('frfcfs', "Memory scheduling policy")
+    mem_sched_policy    = Param.MemSched('frfcfs', "Memory scheduling policy")
+    inter_QSched_policy = Param.iterQSched('single', "multi per read/write queue policy")
 
     # pipeline latency of the controller and PHY, split into a
     # frontend part and a backend part, with reads and writes serviced
@@ -94,5 +99,4 @@ class MemCtrl(QoSMemCtrl):
     command_window = Param.Latency("10ns", "Static backend latency")
 
     mySchedObj     = Param.myScheduler(myScheduler(),"fefeff")
-
-
+    iterSched      = Param.InterQueue(NULL, "multi per read/write queue selector")
