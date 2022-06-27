@@ -60,7 +60,6 @@
 #include "mem/qport.hh"
 #include "params/MemCtrl.hh"
 #include "sim/eventq.hh"
-
 namespace gem5
 {
 

@@ -50,6 +50,7 @@
 #include "mem/mem_interface.hh"
 #include "mem/mySchedule/my_scheduler.hh"
 #include "sim/system.hh"
+#include "mem/mySchedule/inter_queue.hh"
 
 namespace gem5
 {
@@ -79,14 +80,14 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
     nextBurstAt(0), prevArrival(0),
     nextReqTime(0),
     stats(*this),
-    myShed(p.mySchedObj),//,
+    myShed(p.mySchedObj),
     iterQSchedPolicy(p.inter_QSched_policy),
-    iterSched(p.iterSched)
+    iterSched((InterQueue*)(p.iterSched))
 
 {
     DPRINTF(MemCtrl, "Setting up controller\n");
-    readQueue.resize(p.qos_priorities);
-    writeQueue.resize(p.qos_priorities);
+    readQueue.resize (p.iterQSizePerRW);
+    writeQueue.resize(p.iterQSizePerRW);
 
     // Hook up interfaces to the controller
     if (dram)
@@ -104,6 +105,7 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
 
     myShed->owner = this;
     myShed->dram  = dram;
+    iterSched->setQ(&readQueue, &writeQueue);
 }
 
 void
@@ -502,7 +504,8 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
     unsigned int pkt_count = divCeil(offset + size, burst_size);
 
     // run the QoS scheduler and assign a QoS priority value to the packet
-    qosSchedule( { &readQueue, &writeQueue }, burst_size, pkt);
+    //qosSchedule( { &readQueue, &writeQueue }, burst_size, pkt);
+    iterSched->qFillSel(&readQueue, &writeQueue, pkt, burst_size);
 
     // check local buffers and do not accept if full
     if (pkt->isWrite()) {
@@ -923,9 +926,6 @@ MemCtrl::doBurstAccess(MemPacket* mem_pkt)
 void
 MemCtrl::processNextReqEvent()
 {
-    
-
-
     // transition is handled by QoS algorithm if enabled
     if (turnPolicy) {
         // select bus state - only done if QoS algorithms are in use
@@ -1032,27 +1032,55 @@ MemCtrl::processNextReqEvent()
             MemPacketQueue::iterator to_read;
             uint8_t prio = numPriorities();
 
-            for (auto queue = readQueue.rbegin();
-                 queue != readQueue.rend(); ++queue) {
+            if (!iterSched){
+                for (auto queue = readQueue.rbegin();
+                     queue != readQueue.rend(); ++queue) {
 
-                prio--;
+                    prio--;
 
-                DPRINTF(QOS,
-                        "Checking READ queue [%d] priority [%d elements]\n",
-                        prio, queue->size());
+                    DPRINTF(QOS,
+                            "Checking READ queue [%d] priority [%d elements]\n",
+                            prio, queue->size());
 
 
-                // Figure out which read request goes next
-                // If we are changing command type, incorporate the minimum
-                // bus turnaround delay which will be rank to rank delay
-                to_read = chooseNext((*queue), switched_cmd_type ?
-                                               minWriteToReadDataGap() : 0);
+                    // Figure out which read request goes next
+                    // If we are changing command type, incorporate the minimum
+                    // bus turnaround delay which will be rank to rank delay
+                    to_read = chooseNext((*queue), switched_cmd_type ?
+                                                   minWriteToReadDataGap() : 0);
 
-                if (to_read != queue->end()) {
-                    // candidate read found
-                    read_found = true;
-                    break;
+                    if (to_read != queue->end()) {
+                        // candidate read found
+                        read_found = true;
+                        break;
+                    }
                 }
+            }else{
+                std::vector<MemPacketQueue*> interQHelper = iterSched->qSchedFill(&readQueue, true);
+                for (auto mqIter  = interQHelper.rbegin();
+                          mqIter != interQHelper.rend()  ;
+                          mqIter++) 
+                {
+                
+
+                    DPRINTF(interQ, "Checking READ queue @ interselector\n");
+
+                    MemPacketQueue* preChoose = *mqIter;
+                    // Figure out which read request goes next
+                    // If we are changing command type, incorporate the minimum
+                    // bus turnaround delay which will be rank to rank delay
+                    DPRINTF(interQ, "start choose\n");
+                    to_read = chooseNext(*preChoose, switched_cmd_type ?
+                                                   minWriteToReadDataGap() : 0);
+                    DPRINTF(interQ, "stop choose\n");
+                    if (to_read != preChoose->end()) {
+                        // candidate read found
+                        read_found = true;
+                        break;
+                    }
+                }
+                DPRINTF(interQ, "finished READ queue @ interselector\n");
+
             }
 
             // if no read to an available rank is found then return
@@ -1119,27 +1147,57 @@ MemCtrl::processNextReqEvent()
         MemPacketQueue::iterator to_write;
         uint8_t prio = numPriorities();
 
-        for (auto queue = writeQueue.rbegin();
-             queue != writeQueue.rend(); ++queue) {
+        if (!iterSched){
+        
+            for (auto queue = writeQueue.rbegin();
+                 queue != writeQueue.rend(); ++queue) {
 
-            prio--;
+                prio--;
 
-            DPRINTF(QOS,
-                    "Checking WRITE queue [%d] priority [%d elements]\n",
-                    prio, queue->size());
+                DPRINTF(QOS,
+                        "Checking WRITE queue [%d] priority [%d elements]\n",
+                        prio, queue->size());
 
-            // If we are changing command type, incorporate the minimum
-            // bus turnaround delay
+                // If we are changing command type, incorporate the minimum
+                // bus turnaround delay
 
 
 
-            to_write = chooseNext((*queue),
-                     switched_cmd_type ? minReadToWriteDataGap() : 0);
+                to_write = chooseNext((*queue),
+                         switched_cmd_type ? minReadToWriteDataGap() : 0);
 
-            if (to_write != queue->end()) {
-                write_found = true;
-                break;
+                if (to_write != queue->end()) {
+                    write_found = true;
+                    break;
+                }
             }
+
+        }else{
+                std::vector<MemPacketQueue*> interQHelper = iterSched->qSchedFill(&writeQueue, false);
+                for (auto mqIter  = interQHelper.rbegin();
+                          mqIter != interQHelper.rend()  ;
+                          mqIter++) 
+                {
+                
+
+                    DPRINTF(interQ, "Checking write queue @ interselector\n");
+
+                    MemPacketQueue* preChoose = *mqIter;
+                    // Figure out which read request goes next
+                    // If we are changing command type, incorporate the minimum
+                    // bus turnaround delay which will be rank to rank delay
+                    DPRINTF(interQ, "start choose\n");
+                    to_write = chooseNext(*preChoose, switched_cmd_type ?
+                                                   minWriteToReadDataGap() : 0);
+                    DPRINTF(interQ, "stop choose\n");
+                    if (to_write != preChoose->end()) {
+                        // candidate read found
+                        write_found = true;
+                        break;
+                    }
+                }
+                DPRINTF(interQ, "finished write_found queue @ interselector\n");
+
         }
 
         // if there are no writes to a rank that is available to service

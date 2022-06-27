@@ -52,7 +52,7 @@ class QoSMemCtrl(ClockedObject):
     ##### QoS support parameters ####
 
     # Number of priorities in the system
-    qos_priorities = Param.Unsigned(1, "QoS priorities")
+    qos_priorities = Param.Unsigned(2, "QoS priorities")
 
     # QoS scheduler policy: tags request with QoS priority value
     qos_policy = Param.QoSPolicy(NULL,

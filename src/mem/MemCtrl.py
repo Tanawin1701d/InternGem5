@@ -43,6 +43,7 @@ from m5.proxy import *
 from m5.objects.QoSMemCtrl  import *
 from m5.objects.myScheduler import *
 from m5.objects.InterQueue  import *
+#from m5.objects.SimpleQueue import *
 #from m5.objects.iterQSched  import * 
 
 # Enum for memory scheduling algorithms, currently First-Come
@@ -98,5 +99,8 @@ class MemCtrl(QoSMemCtrl):
 
     command_window = Param.Latency("10ns", "Static backend latency")
 
+    iterQSizePerRW = Param.Unsigned(2, "QoS priorities")
+
+
     mySchedObj     = Param.myScheduler(myScheduler(),"fefeff")
-    iterSched      = Param.InterQueue(NULL, "multi per read/write queue selector")
+    iterSched      = Param.InterQueue(ALGO_WF_Queue(), "multi per read/write queue selector")
