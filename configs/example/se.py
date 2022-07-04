@@ -169,6 +169,9 @@ system = System(cpu = [CPUClass(cpu_id=i) for i in range(np)],
                 mem_ranges = [AddrRange(args.mem_size)],
                 cache_line_size = args.cacheline_size)
 
+print(system.cpu[0].decoder)
+
+
 if numThreads > 1:
     system.multi_thread = True
 
@@ -196,6 +199,7 @@ if args.elastic_trace_en:
 # frequency.
 for cpu in system.cpu:
     cpu.clk_domain = system.cpu_clk_domain
+print(2,system.cpu[0].decoder)
 
 if ObjectList.is_kvm_cpu(CPUClass) or ObjectList.is_kvm_cpu(FutureClass):
     if buildEnv['TARGET_ISA'] == 'x86':
@@ -212,6 +216,7 @@ if args.simpoint_profile:
         fatal("SimPoint/BPProbe should be done with an atomic cpu")
     if np > 1:
         fatal("SimPoint generation not supported with more than one CPUs")
+print(2.5,system.cpu[0].decoder)
 
 for i in range(np):
     if args.smt:
@@ -235,8 +240,10 @@ for i in range(np):
         indirectBPClass = \
             ObjectList.indirect_bp_list.get(args.indirect_bp_type)
         system.cpu[i].branchPred.indirectBranchPred = indirectBPClass()
-
+    
+    print(2.75,system.cpu[0].decoder)
     system.cpu[i].createThreads()
+print(3,system.cpu[0].decoder)
 
 if args.ruby:
     Ruby.create_system(args, False, system)
@@ -266,6 +273,8 @@ system.workload = SEWorkload.init_compatible(mp0_path)
 
 if args.wait_gdb:
     system.workload.wait_for_remote_gdb = True
+print(system.cpu[0].decoder)
 
 root = Root(full_system = False, system = system)
+type(FutureClass)
 Simulation.run(args, root, system, FutureClass)

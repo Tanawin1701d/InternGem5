@@ -1,0 +1,38 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch and debug gem5 in se mode",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/X86/gem5.debug",
+            "args": [
+                
+                "--debug-flag=Exec",
+                "configs/example/se.py" ,
+                "--cmd=tests/test-progs/hello/bin/x86/linux/hello" ,
+                "--cpu-type=TimingSimpleCPU" ,
+                "--l1d_size=64kB",
+                "--l1i_size=16kB" ,
+                "--fast-forward=45000"
+
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [{
+                "name": "M5_PATH",
+                "value": "${workspaceFolder}"
+            }],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+    ]
+}
