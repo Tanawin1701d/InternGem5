@@ -425,6 +425,8 @@ def repeatSwitch(testsys, repeat_switch_cpu_list, maxtick, switch_freq):
             return exit_event
 
 def run(options, root, testsys, cpu_class):
+    print("test sys dec at runner ", testsys.cpu[0].decoder)
+
     if options.checkpoint_dir:
         cptdir = options.checkpoint_dir
     elif m5.options.outdir:
@@ -474,6 +476,8 @@ def run(options, root, testsys, cpu_class):
             switch_cpus[i].progress_interval = \
                 testsys.cpu[i].progress_interval
             switch_cpus[i].isa = testsys.cpu[i].isa
+            switch_cpus[i].decoder = testsys.cpu[i].decoder
+
             # simulation period
             if options.maxinsts:
                 switch_cpus[i].max_insts_any_thread = options.maxinsts
@@ -496,6 +500,7 @@ def run(options, root, testsys, cpu_class):
 
         testsys.switch_cpus = switch_cpus
         switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in range(np)]
+        print("pass set simulation\n")
 
     if options.repeat_switch:
         switch_class = getCPUClass(options.cpu_type)[0]
@@ -607,12 +612,17 @@ def run(options, root, testsys, cpu_class):
 
     if options.take_simpoint_checkpoints != None:
         simpoints, interval_length = parseSimpointAnalysisFile(options, testsys)
-
+        print("pass instant\n")
+    print("pass op0\n")
     checkpoint_dir = None
     if options.checkpoint_restore:
         cpt_starttick, checkpoint_dir = findCptDir(options, cptdir, testsys)
     root.apply_config(options.param)
+    print("pass op1\n")
+    print("test sys dec ", testsys.cpu[0].decoder)
     m5.instantiate(checkpoint_dir)
+    print("pass op2\n")
+
 
     # Initialization is complete.  If we're not in control of simulation
     # (that is, if we're a slave simulator acting as a component in another
@@ -651,6 +661,7 @@ def run(options, root, testsys, cpu_class):
         warn("Specified multiple of --abs-max-tick, --rel-max-tick, --maxtime."\
              " Using least")
     maxtick = min([maxtick_from_abs, maxtick_from_rel, maxtick_from_maxtime])
+    print("pass set simulation2\n")
 
     if options.checkpoint_restore != None and maxtick < cpt_starttick:
         fatal("Bad maxtick (%d) specified: " \
