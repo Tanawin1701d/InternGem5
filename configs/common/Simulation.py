@@ -477,6 +477,7 @@ def run(options, root, testsys, cpu_class):
                 testsys.cpu[i].progress_interval
             switch_cpus[i].isa = testsys.cpu[i].isa
             switch_cpus[i].decoder = testsys.cpu[i].decoder
+            switch_cpus[i].is_from_network = testsys.cpu[i].is_from_network
 
             # simulation period
             if options.maxinsts:

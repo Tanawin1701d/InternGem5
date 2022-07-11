@@ -19,3 +19,9 @@ class ALGO_WF_Queue(InterQueue):
     type       =  'ALGO_WF_Queue'
     cxx_header = 'mem/mySchedule/inter_queue.hh'
     cxx_class  = 'gem5::memory::ALGO_WF_Queue'
+
+class ALGO_NETQ_Queue(InterQueue):
+    type         = 'ALGO_NETQ_Queue'
+    cxx_header   = 'mem/mySchedule/inter_queue.hh'
+    cxx_class    = 'gem5::memory::ALGO_NETQ_Queue'
+    NetAwareThds = Param.Latency("10ns", "qos for network packet")

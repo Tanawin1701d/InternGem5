@@ -1,6 +1,7 @@
 {
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Launch and debug gem5 in se mode",
             "type": "cppdbg",
@@ -8,13 +9,16 @@
             "program": "${workspaceFolder}/build/X86/gem5.debug",
             "args": [
                 
-                "--debug-flag=Exec",
-                "configs/example/se.py" ,
-                "--cmd=tests/test-progs/hello/bin/x86/linux/hello" ,
-                "--cpu-type=TimingSimpleCPU" ,
+                "--debug-flag=Exec,PseudoInst",
+                "configs/learning_gem5/newBench.py" ,
+                "--cmd=/home/tanawin/Work/Hwsim/netBench/cmake-build-debug/netBench1;/home/tanawin/Work/Hwsim/netBench/cmake-build-debug/netBench1" ,
+                "--cpu-type=DerivO3CPU" ,
                 "--l1d_size=64kB",
-                "--l1i_size=16kB" ,
-                "--fast-forward=45000"
+                "--l1i_size=16kB",
+                "--fast-forward=100000000000000",
+                "--caches",
+                "-n 2 ",
+                "--interQmemSched=ALGO_NETQ_Queue"
 
             ],
             "stopAtEntry": false,

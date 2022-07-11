@@ -118,7 +118,9 @@ def config_mem(options, system):
 
     # Semi-optional options
     # Must have either mem_type or nvm_type or both
-    opt_mem_sched = getattr(options, "memSched", "frfcfs")
+    opt_mem_sched = getattr(options, "memSched"   , "frfcfs"    )
+    opt_mem_sched_iter = getattr(options, "interQmemSched", "SimpleQueue")
+    opt_mem_sched_net_acc = getattr(options, "netQosLatency", "1ns")
     opt_mem_type  = getattr(options, "mem_type", None)
     opt_nvm_type  = getattr(options, "nvm_type", None)
     if not opt_mem_type and not opt_nvm_type:
@@ -222,6 +224,10 @@ def config_mem(options, system):
                 mem_ctrl = dram_intf.controller()
                 #############################################################
                 mem_ctrl.mem_sched_policy = opt_mem_sched
+                mem_ctrl.iterSched        = ObjectList.ObjectList(getattr(m5.objects, 'InterQueue', None)).get(opt_mem_sched_iter)()
+                if (opt_mem_sched_iter == "ALGO_NETQ_Queue"):
+                    mem_ctrl.iterSched.NetAwareThds = opt_mem_sched_net_acc
+                    
                 mem_ctrls.append(mem_ctrl)
 
             elif opt_nvm_type and (not opt_mem_type or range_iter % 2 == 0):

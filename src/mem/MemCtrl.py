@@ -103,4 +103,5 @@ class MemCtrl(QoSMemCtrl):
 
 
     mySchedObj     = Param.myScheduler(myScheduler(),"fefeff")
-    iterSched      = Param.InterQueue(ALGO_WF_Queue(), "multi per read/write queue selector")
+    #iterSched      = Param.InterQueue(ALGO_WF_Queue(), "multi per read/write queue selector")
+    iterSched      = Param.InterQueue(NULL, "multi per read/write queue selector")

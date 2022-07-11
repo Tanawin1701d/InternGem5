@@ -105,7 +105,7 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
 
     myShed->owner = this;
     myShed->dram  = dram;
-    iterSched->setQ(&readQueue, &writeQueue);
+    //iterSched->setQ(&readQueue, &writeQueue);
 }
 
 void
@@ -290,16 +290,18 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             stats.rdQLenPdf[totalReadQueueSize + respQueue.size()]++;
 
             DPRINTF(MemCtrl, "Adding to read queue\n");
-
+            // add meta data before added to read queue
             mem_pkt->fromNetwork = mem_pkt->pkt->req->fromNetwork;
             mem_pkt->cpuId = mem_pkt->pkt->req->cpuId;
+            mem_pkt->queueAddedTime = curTick();
+
             if (mem_pkt->fromNetwork){
                 stats.mempktNetwork++;
             } else {
                 stats.mempktCpu++;
             }
             readQueue[mem_pkt->qosValue()].push_back(mem_pkt);
-
+            ///////////////////////////////////////////////////////////
             // log packet
             logRequest(MemCtrl::READ, pkt->requestorId(), pkt->qosValue(),
                        mem_pkt->addr, 1);
@@ -373,10 +375,12 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
 
             DPRINTF(MemCtrl, "Adding to write queue\n");
             
+            // add meta dayta before add to queue
             assert(mem_pkt->pkt->req != nullptr);
             mem_pkt->fromNetwork = mem_pkt->pkt->req->fromNetwork;
             mem_pkt->cpuId = mem_pkt->pkt->req->cpuId;
-
+            mem_pkt->queueAddedTime = curTick();
+            ///////////////////////////////////////////////////////////
             if (mem_pkt->fromNetwork){
                 stats.mempktNetwork++;
             } else {
@@ -504,8 +508,10 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
     unsigned int pkt_count = divCeil(offset + size, burst_size);
 
     // run the QoS scheduler and assign a QoS priority value to the packet
-    //qosSchedule( { &readQueue, &writeQueue }, burst_size, pkt);
-    iterSched->qFillSel(&readQueue, &writeQueue, pkt, burst_size);
+    if (iterSched)
+        iterSched->qFillSel(&readQueue, &writeQueue, pkt, burst_size);
+    else
+        qosSchedule( { &readQueue, &writeQueue }, burst_size, pkt);
 
     // check local buffers and do not accept if full
     if (pkt->isWrite()) {
@@ -1056,7 +1062,7 @@ MemCtrl::processNextReqEvent()
                     }
                 }
             }else{
-                std::vector<MemPacketQueue*> interQHelper = iterSched->qSchedFill(&readQueue, true);
+                std::vector<MemPacketQueue*> interQHelper = iterSched->qSchedFill(&readQueue, &writeQueue, true);
                 for (auto mqIter  = interQHelper.rbegin();
                           mqIter != interQHelper.rend()  ;
                           mqIter++) 
@@ -1173,7 +1179,7 @@ MemCtrl::processNextReqEvent()
             }
 
         }else{
-                std::vector<MemPacketQueue*> interQHelper = iterSched->qSchedFill(&writeQueue, false);
+                std::vector<MemPacketQueue*> interQHelper = iterSched->qSchedFill(&writeQueue, &readQueue, false);
                 for (auto mqIter  = interQHelper.rbegin();
                           mqIter != interQHelper.rend()  ;
                           mqIter++) 

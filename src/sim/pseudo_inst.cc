@@ -461,6 +461,29 @@ switchcpu(ThreadContext *tc)
     exitSimLoop("switchcpu");
 }
 
+int count = 2;
+int cur_count = 0;
+std::vector<ThreadContext*> preExits;
+
+void
+lastSwitch(ThreadContext *tc){
+    DPRINTF(PseudoInst, "pseudo_inst::myCpu()\n");
+    cur_count++;
+    tc->suspend();
+    preExits.push_back(tc);
+    DPRINTF(PseudoInst, "pseudo_inst::myCpu : %d\n",tc->getCpuPtr()->numSimulatedCPUs());
+    if ( cur_count == (tc->getCpuPtr()->numSimulatedCPUs()/2) ){
+        for(auto ww : preExits){
+            assert( ww->status() ==  ThreadContext::Status::Suspended);
+            ww->activate();
+        }
+        dumpstats(tc, 0, 0);
+        exitSimLoop("switchcpu");
+    
+    }
+    
+}
+
 void
 togglesync(ThreadContext *tc)
 {

@@ -101,6 +101,7 @@ class MemPacket
 
     int cpuId = -1;
     bool fromNetwork = false;
+    Tick queueAddedTime; // tick that 
     /** When did request enter the controller */
     const Tick entryTime;
 
