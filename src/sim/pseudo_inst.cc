@@ -484,6 +484,17 @@ lastSwitch(ThreadContext *tc){
     
 }
 
+uint64_t
+getTime(ThreadContext *tc){ 
+
+    static const int OneBillion = 1000 * 1000 * 1000;
+    uint64_t elapsed_nsecs = curTick() / sim_clock::as_int::ns;
+    uint64_t nsec          = elapsed_nsecs % OneBillion;
+
+    return nsec;
+
+}
+
 void
 togglesync(ThreadContext *tc)
 {

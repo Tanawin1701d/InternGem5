@@ -943,7 +943,7 @@ Commit::commit()
 
 void
 Commit::commitInsts()
-{
+{ 
     ////////////////////////////////////
     // Handle commit
     // Note that commit will be handled prior to putting new

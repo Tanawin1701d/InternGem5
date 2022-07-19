@@ -146,9 +146,7 @@ class SyscallDescABI : public SyscallDesc
 
             // Use invokeSimcall to gather the other arguments based on the
             // given ABI and pass them to the syscall implementation.
-            return invokeSimcall<ABI, false, SyscallReturn, Args...>(tc,
-                    std::function<SyscallReturn(ThreadContext *, Args...)>(
-                        partial));
+            return invokeSimcall<ABI, false, SyscallReturn, Args...>(tc, std::function<SyscallReturn(ThreadContext *, Args...)> (partial) );
         };
     }
 

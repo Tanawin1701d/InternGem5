@@ -300,7 +300,18 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             } else {
                 stats.mempktCpu++;
             }
-            readQueue[mem_pkt->qosValue()].push_back(mem_pkt);
+            
+            if (iterSched){
+                iterSched->push_to_queue(mem_pkt,
+                                         &readQueue,
+                                         &writeQueue,
+                                         true,
+                                         mem_pkt->qosValue(),
+                                         dram
+                )
+            }else{
+                readQueue[mem_pkt->qosValue()].push_back(mem_pkt);
+            }
             ///////////////////////////////////////////////////////////
             // log packet
             logRequest(MemCtrl::READ, pkt->requestorId(), pkt->qosValue(),
@@ -387,7 +398,17 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
                 stats.mempktCpu++;
             }
 
-            writeQueue[mem_pkt->qosValue()].push_back(mem_pkt);
+            if (iterSched){
+                iterSched->push_to_queue(mem_pkt, 
+                                        &writeQueue, 
+                                        &readQueue,
+                                        false,
+                                        mem_pkt->qosValue(),
+                                        dram
+                )
+            }else{
+                writeQueue[mem_pkt->qosValue()].push_back(mem_pkt);
+            }
             isInWriteQueue.insert(burstAlign(addr, is_dram));
 
             // log packet
@@ -933,10 +954,15 @@ void
 MemCtrl::processNextReqEvent()
 {
     // transition is handled by QoS algorithm if enabled
-    if (turnPolicy) {
-        // select bus state - only done if QoS algorithms are in use
-        busStateNext = selectNextBusState();
-    }
+    
+    // if (turnPolicy) {
+    //     // select bus state - only done if QoS algorithms are in use
+    //     busStateNext = selectNextBusState();
+    // }
+    iterSched->turnpolicy(busStateNext, &readQueue, &writeQueue);
+
+
+
 
     // detect bus state change
     bool switched_cmd_type = (busState != busStateNext);
@@ -1089,6 +1115,8 @@ MemCtrl::processNextReqEvent()
 
             }
 
+            iterSched->notifySelect(*to_read, true, &readQueue);
+
             // if no read to an available rank is found then return
             // at this point. There could be writes to the available ranks
             // which are above the required threshold. However, to
@@ -1098,6 +1126,7 @@ MemCtrl::processNextReqEvent()
                 DPRINTF(MemCtrl, "No Reads Found - exiting\n");
                 return;
             }
+        
 
             auto mem_pkt = *to_read;
 
@@ -1205,6 +1234,8 @@ MemCtrl::processNextReqEvent()
                 DPRINTF(interQ, "finished write_found queue @ interselector\n");
 
         }
+        
+        iterSched->notifySelect(*to_write, false, &writeQueue);
 
         // if there are no writes to a rank that is available to service
         // requests (i.e. rank is in refresh idle state) are found then

@@ -25,3 +25,15 @@ class ALGO_NETQ_Queue(InterQueue):
     cxx_header   = 'mem/mySchedule/inter_queue.hh'
     cxx_class    = 'gem5::memory::ALGO_NETQ_Queue'
     NetAwareThds = Param.Latency("10ns", "qos for network packet")
+
+class STAGE_SCHED_Queue(InterQueue):
+    type         =  "STAGE_SCHED_Queue"
+    cxx_header   =  "mem/mySchedule/inter_queue.hh"
+    cxx_class    =  "gem5::memory::STAGE_SCHED_Queue"
+    numStages    = Param.Unsigned(4, "number of stage (typically n(cores+network pe))")
+    rr_max_lotto = Param.Unsigned(50, "amount that loto that was given to round-rubin policy")
+    max_lotto    = Param.Unsigned(100, "amount that loto that was given to round-rubin policy")
+
+
+
+    

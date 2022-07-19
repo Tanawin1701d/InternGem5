@@ -103,6 +103,7 @@
     M5OP(m5_debug_break, M5OP_DEBUG_BREAK)                      \
     M5OP(m5_switch_cpu, M5OP_SWITCH_CPU)                        \
     M5OP(m5_lastSwitch_cpu, M5OP_RESERVED1)                     \
+    M5OP(getTime, M5OP_RESERVED2)                               \
     M5OP(m5_add_symbol, M5OP_ADD_SYMBOL)                        \
     M5OP(m5_panic, M5OP_PANIC)                                  \
     M5OP(m5_work_begin, M5OP_WORK_BEGIN)                        \

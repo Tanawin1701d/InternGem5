@@ -277,7 +277,7 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 227, "clock_settime" },
     { 228, "clock_gettime", clock_gettimeFunc<X86Linux64> },
     { 229, "clock_getres", clock_getresFunc<X86Linux64> },
-    { 230, "clock_nanosleep" },
+    { 230, "clock_nanosleep", clock_nanoSleepFunc<X86Linux64> },
     { 231, "exit_group", exitGroupFunc },
     { 232, "epoll_wait" },
     { 233, "epoll_ctl" },
@@ -361,6 +361,7 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 311, "proess_vm_writev" },
     { 312, "kcmp" },
     { 313, "finit_module" },
+    {1701, "callPicard", callPicardFunc<X86Linux64>},
 };
 
 } // namespace X86ISA

@@ -94,6 +94,10 @@ class ThreadContext;
 class CPU : public BaseCPU
 {
   public:
+
+  int wantShowNext = 6;
+
+
     typedef std::list<DynInstPtr>::iterator ListIt;
 
     friend class ThreadContext;

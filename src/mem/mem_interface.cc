@@ -599,6 +599,10 @@ DRAMInterface::chooseFNFRFCFS(MemPacketQueue& queue, Tick min_col_at, bool src) 
             
     }
 
+bool
+DRAMInterface::isSameRow(MemPacket* a, MemPacket* b){
+    return a->row == b->row;
+}
 
 MemPacketQueue::iterator
 DRAMInterface::chooseNextFCFSNRE(MemPacketQueue& queue) const

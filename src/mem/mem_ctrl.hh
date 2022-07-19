@@ -70,6 +70,7 @@ class DRAMInterface;
 class NVMInterface;
 class gem5::mySchedule::myScheduler;
 class InterQueue;
+STAGE_SCHED_Queue::BATCHID;
 /**
  * A burst helper helps organize and manage a packet that is larger than
  * the memory burst size. A system packet that is larger than the burst size
@@ -102,6 +103,7 @@ class MemPacket
     int cpuId = -1;
     bool fromNetwork = false;
     Tick queueAddedTime; // tick that 
+    STAGE_SCHED_Queue::BATCHID batchId ;
     /** When did request enter the controller */
     const Tick entryTime;
 

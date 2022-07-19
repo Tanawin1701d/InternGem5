@@ -7,9 +7,11 @@
 #include "params/SimpleQueue.hh"
 #include "params/ALGO_WF_Queue.hh"
 #include "params/ALGO_NETQ_Queue.hh"
+#include "params/STAGE_SCHED_Queue.hh"
 #include "enums/iterQSched.hh"
 #include "debug/interQ.hh"
 #include "debug/ALGO_NETQ_Queue.hh"
+#include <unordered_map>
 
 
 
@@ -30,6 +32,7 @@ namespace memory
             InterQueue& INterQueueOwner;
 
             statistics::Scalar reachNwThreshold;
+            statistics::Scalar switchRW;
         };
 
         InterQueueStats stats;
@@ -44,7 +47,25 @@ namespace memory
                                                          std::vector<MemPacketQueue>* opsiteQueue,
                                                          bool                         read   ) = 0; // otherwise is write
 
+        virtual void notifySelect(MemPacket* mempkt, bool is_read,
+                                  std::vector<MemPacketQueue>* queues
+);
+
+        virtual void turnpolicy(qos::MemCtrl::BusState& bs,
+                                std::vector<MemPacketQueue>* readQueues, 
+                                std::vector<MemPacketQueue>* writeQueues);
         //static InterQueue* creator(enums::iterQSched  iterPolicy);
+
+        void push_to_queue(MemPacket* mempkt,
+                          std::vector<MemPacketQueue>* queues,
+                          std::vector<MemPacketQueue>* opsiteQueue,
+                          bool                         is_read,
+                          uint8_t                      qid,
+                          DRAMInterface*               dram
+                          );
+
+        
+
         InterQueue(const InterQueueParams &p);
 
     };
@@ -99,11 +120,75 @@ namespace memory
                                                  std::vector<MemPacketQueue>* opsiteQueue,
                                                  bool                         read);
 
+            
+            void turnpolicy(qos::MemCtrl::BusState& bs,
+                            std::vector<MemPacketQueue>* readQueues, 
+                            std::vector<MemPacketQueue>* writeQueues
+                            ) override;
+
+
         ALGO_NETQ_Queue(const ALGO_NETQ_QueueParams &params);
 
     };
 
+    class STAGE_SCHED_Queue : public InterQueue{
+        public:
+            typedef uint64_t BATCHID;
+        private:
+            typedef uint8_t  QUEUEID;
+            enum state {exploiting, wait4Sel};
+            enum StagePolicy {rr, sjf};
 
+            
+            
+            struct batchState{
+                BATCHID startBatchId = 0;
+                BATCHID lastBatchId = 0;
+                std::unordered_map<BATCHID, uint64_t> batchMap;
+            };
+
+            uint8_t numStages;
+            uint8_t rr_max_lotto;
+            uint8_t max_lotto;
+
+            std::vector<batchState> readStages;
+            std::vector<batchState> writeStages;
+            state                   ReadCmdStatus;
+            state                   WriteCmdStatus;
+            uint8_t                 selectedReadStage;
+            uint8_t                 selectedWriteStage;
+
+        public:
+        // must override
+        uint8_t qFillSel(std::vector<MemPacketQueue>* readQueues, 
+                         std::vector<MemPacketQueue>* writeQueues,
+                         PacketPtr pkt,
+                         uint32_t burst_size);
+
+        std::vector<MemPacketQueue*>  qSchedFill(std::vector<MemPacketQueue>* queues,
+                                                 std::vector<MemPacketQueue>* opsiteQueue,
+                                                 bool                         read   );
+
+        virtual void notifySelect(MemPacket* mempkt, bool is_read,
+                                  std::vector<MemPacketQueue>* queues);
+
+        // must have for this 
+        void push_to_queue(MemPacket* mempkt,
+                          std::vector<MemPacketQueue>* queues,
+                          std::vector<MemPacketQueue>* opsiteQueue,
+                          bool                         is_read,
+                          uint8_t                      qid,
+                          DRAMInterface*               dram
+                          );
+    
+        StagePolicy genlotto();
+
+        STAGE_SCHED_Queue(const STAGE_SCHED_QueueParams &p);
+
+
+
+    
+    };
 
 }
 }

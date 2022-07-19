@@ -56,6 +56,7 @@
 #include "debug/O3CPU.hh"
 #include "debug/Quiesce.hh"
 #include "enums/MemoryMode.hh"
+#include "debug/mydelay.hh"
 #include "sim/cur_tick.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
@@ -521,6 +522,17 @@ CPU::tick()
         cleanUpRemovedInsts();
     }
 
+
+    if (wantShowNext <= 5){
+        wantShowNext++;
+        if (wantShowNext == 1){
+            DPRINTF(mydelay, "tick after pause!\n");
+        }else{
+            DPRINTF(mydelay, "tick normal!\n");
+        }
+    }
+
+    /* next event scheduling*/
     if (!tickEvent.scheduled()) {
         if (_status == SwitchedOut) {
             DPRINTF(O3CPU, "Switched out!\n");
@@ -531,9 +543,19 @@ CPU::tick()
             lastRunningCycle = curCycle();
             cpuStats.timesIdled++;
         } else {
-            schedule(tickEvent, clockEdge(Cycles(1)));
+
+            if ( shouldWeFreeze ){
+                schedule(tickEvent, curTick() + amountOfCycleToFreeze);
+                shouldWeFreeze = false;
+                wantShowNext   = 0;
+                DPRINTF(mydelay, "start freze!\n");
+            }else{
+                schedule(tickEvent, clockEdge(Cycles(1)));
+            }
             DPRINTF(O3CPU, "Scheduling next tick!\n");
         }
+    }else{
+        DPRINTF(O3CPU, "Let me see where it from!\n");
     }
 
     if (!FullSystem)

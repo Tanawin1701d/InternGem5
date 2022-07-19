@@ -288,6 +288,12 @@ class BaseCPU : public ClockedObject
     /// Notify the CPU that the indicated context is now halted.
     virtual void haltContext(ThreadID thread_num);
 
+    /* mark that we must delay */
+    bool shouldWeFreeze = false;
+    Tick amountOfCycleToFreeze;
+
+
+
     /// Given a Thread Context pointer return the thread num
     int findContext(ThreadContext *tc);
 

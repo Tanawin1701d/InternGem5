@@ -957,6 +957,9 @@ class DRAMInterface : public MemInterface
     std::pair<MemPacketQueue::iterator, Tick>
     chooseFNFRFCFS(MemPacketQueue& queue, Tick min_col_at, bool src) ;
 
+    bool 
+    isSameRow(MemPacket* a, MemPacket* b);
+
     MemPacketQueue::iterator
     chooseNextFCFSNRE(MemPacketQueue& queue) const;
 

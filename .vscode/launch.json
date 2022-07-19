@@ -9,16 +9,15 @@
             "program": "${workspaceFolder}/build/X86/gem5.debug",
             "args": [
                 
-                "--debug-flag=Exec,PseudoInst",
+                "--debug-flag=PseudoInst,MY_SYS,mydelay",
                 "configs/learning_gem5/newBench.py" ,
-                "--cmd=/home/tanawin/Work/Hwsim/netBench/cmake-build-debug/netBench1;/home/tanawin/Work/Hwsim/netBench/cmake-build-debug/netBench1" ,
+                "--cmd=/home/tanawin/Work/Hwsim/netBench/cmake-build-debug/waitBench1" ,
                 "--cpu-type=DerivO3CPU" ,
                 "--l1d_size=64kB",
                 "--l1i_size=16kB",
-                "--fast-forward=100000000000000",
                 "--caches",
-                "-n 2 ",
-                "--interQmemSched=ALGO_NETQ_Queue"
+                "-n 1 ",
+                "--interQmemSched=SimpleQueue"
 
             ],
             "stopAtEntry": false,

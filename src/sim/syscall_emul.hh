@@ -109,6 +109,8 @@
 #include "sim/syscall_emul_buf.hh"
 #include "sim/syscall_return.hh"
 
+#include "debug/MY_SYS.hh"
+
 #if defined(__APPLE__) && defined(__MACH__) && !defined(CMSG_ALIGN)
 #define CMSG_ALIGN(len) (((len) + sizeof(size_t) - 1) & ~(sizeof(size_t) - 1))
 #elif defined(__FreeBSD__) && !defined(CMSG_ALIGN)
@@ -2099,6 +2101,39 @@ clock_gettimeFunc(SyscallDesc *desc, ThreadContext *tc,
 
     return 0;
 }
+
+template<class OS>
+SyscallReturn
+clock_nanoSleepFunc( SyscallDesc *desc, ThreadContext *tc,
+                  int clk_id, int flags,VPtr<typename OS::timespec> tp_req, VPtr<typename OS::timespec> tp_rem)
+{
+    int64_t nn = tp_req->tv_nsec;
+    DPRINTF(MY_SYS, " your user want to sleep for %lld\n", nn);
+    Tick latTick =  getClockFrequency() * (nn * (1e-9));
+    tc->getCpuPtr()->amountOfCycleToFreeze = latTick;
+    tc->getCpuPtr()->shouldWeFreeze = true;
+    // todo change it to precise sleep;
+    
+    return 0;
+}
+
+template<class OS>
+SyscallReturn
+callPicardFunc( SyscallDesc *desc, ThreadContext *tc,
+                  int primeDirective)
+{
+    if (primeDirective == 1){
+        DPRINTF(MY_SYS, "you are calling primeDirective\n");
+    }else{
+        DPRINTF(MY_SYS, "this is not prime directive\n");
+    }
+
+
+    return 0;
+}
+
+
+
 
 /// Target clock_getres() function.
 template <class OS>
