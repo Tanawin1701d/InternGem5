@@ -70,7 +70,7 @@ class DRAMInterface;
 class NVMInterface;
 class gem5::mySchedule::myScheduler;
 class InterQueue;
-STAGE_SCHED_Queue::BATCHID;
+//STAGE_SCHED_Queue::BATCHID;
 /**
  * A burst helper helps organize and manage a packet that is larger than
  * the memory burst size. A system packet that is larger than the burst size
@@ -103,7 +103,8 @@ class MemPacket
     int cpuId = -1;
     bool fromNetwork = false;
     Tick queueAddedTime; // tick that 
-    STAGE_SCHED_Queue::BATCHID batchId ;
+    //STAGE_SCHED_Queue::BATCHID 
+    uint64_t batchId;
     /** When did request enter the controller */
     const Tick entryTime;
 
@@ -310,7 +311,7 @@ class MemCtrl : public qos::MemCtrl
      * @param pkt_count The number of entries needed in the read queue
      * @return true if read queue is full, false otherwise
      */
-    bool readQueueFull(unsigned int pkt_count) const;
+    bool readQueueFull(unsigned int pkt_count, uint8_t cpuId = 0) ;
 
     /**
      * Check if the write queue has room for more entries
@@ -318,7 +319,7 @@ class MemCtrl : public qos::MemCtrl
      * @param pkt_count The number of entries needed in the write queue
      * @return true if write queue is full, false otherwise
      */
-    bool writeQueueFull(unsigned int pkt_count) const;
+    bool writeQueueFull(unsigned int pkt_count, uint8_t cpuId = 0) ;
 
     /**
      * When a new read comes in, first check if the write q has a
@@ -600,6 +601,9 @@ class MemCtrl : public qos::MemCtrl
 
         statistics::Scalar mempktNetwork;
         statistics::Scalar mempktCpu;
+
+        statistics::Vector pktNetWork;
+        statistics::Vector pktCpus;
 
     };
 

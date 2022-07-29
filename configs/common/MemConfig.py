@@ -119,8 +119,10 @@ def config_mem(options, system):
     # Semi-optional options
     # Must have either mem_type or nvm_type or both
     opt_mem_sched = getattr(options, "memSched"   , "frfcfs"    )
+    opt_mem_sched_iter_sizeHelp = getattr(options, "interQmemSizeHelp", "single")
     opt_mem_sched_iter = getattr(options, "interQmemSched", "SimpleQueue")
     opt_mem_sched_net_acc = getattr(options, "netQosLatency", "1ns")
+
     opt_mem_type  = getattr(options, "mem_type", None)
     opt_nvm_type  = getattr(options, "nvm_type", None)
     if not opt_mem_type and not opt_nvm_type:
@@ -225,8 +227,13 @@ def config_mem(options, system):
                 #############################################################
                 mem_ctrl.mem_sched_policy = opt_mem_sched
                 mem_ctrl.iterSched        = ObjectList.ObjectList(getattr(m5.objects, 'InterQueue', None)).get(opt_mem_sched_iter)()
+                mem_ctrl.inter_QSched_policy =  opt_mem_sched_iter_sizeHelp
                 if (opt_mem_sched_iter == "ALGO_NETQ_Queue"):
                     mem_ctrl.iterSched.NetAwareThds = opt_mem_sched_net_acc
+                elif(opt_mem_sched_iter == "STAGE_SCHED_Queue"):
+                    mem_ctrl.iterSched.numStages = options.num_cpus
+                    mem_ctrl.iterQSizePerRW      = options.num_cpus
+                    mem_ctrl.qos_priorities      = options.num_cpus
                     
                 mem_ctrls.append(mem_ctrl)
 

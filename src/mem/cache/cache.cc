@@ -1213,6 +1213,11 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
     bool is_secure = pkt->isSecure();
     CacheBlk *blk = tags->findBlock(pkt->getAddr(), is_secure);
 
+    if (blk != nullptr){
+        blk->cpuId       = pkt->req->cpuId;
+        blk->fromNetwork = pkt->req->fromNetwork;
+    }
+
     Addr blk_addr = pkt->getBlockAddr(blkSize);
     MSHR *mshr = mshrQueue.findMatch(blk_addr, is_secure);
 

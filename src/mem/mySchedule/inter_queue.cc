@@ -38,14 +38,27 @@ void
 InterQueue::InterQueueStats::regStats(){};
 
 void 
-InterQueue::notifySelect(MemPacket* mempkt, bool is_read,                          std::vector<MemPacketQueue>* queues
-                          std::vector<MemPacketQueue>* queues
-){}
+InterQueue::notifySelect(MemPacket* mempkt,
+                         bool is_read,
+                         std::vector<MemPacketQueue>* queues
+                         )
+{}
 
 void
 InterQueue::turnpolicy(qos::MemCtrl::BusState& bs,
                         std::vector<MemPacketQueue>* readQueues, 
                         std::vector<MemPacketQueue>* writeQueues){}
+
+void
+InterQueue::push_to_queue(MemPacket* mempkt,
+                          std::vector<MemPacketQueue>* queues,
+                          std::vector<MemPacketQueue>* opsiteQueue,
+                          bool                         is_read,
+                          uint8_t                      qid,
+                          DRAMInterface*               dram
+                          ){
+                              (*queues)[qid].push_back(mempkt);
+                          }
 /////////////////////////////////// simple policy
 
 SimpleQueue::SimpleQueue(const SimpleQueueParams& params) : InterQueue(params){
@@ -87,15 +100,7 @@ SimpleQueue::qSchedFill(std::vector<MemPacketQueue>* queues,
 
 }
 
-void push_to_queue(MemPacket* mempkt,
-                    std::vector<MemPacketQueue>* queues,
-                    std::vector<MemPacketQueue>* opsiteQueue,
-                    bool                         is_read,
-                    uint8_t                      qid,
-                    DRAMInterface*               dram
-                    ){
-                        (*queues)[qid].push_back(mempkt);
-                    }
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////// ALGO_WF_Queue
@@ -243,10 +248,10 @@ ALGO_NETQ_Queue::turnpolicy(qos::MemCtrl::BusState& bs,
 
 // must override
 uint8_t 
-STAGE_SCHED_Queue::qFillSel(std::vector<MemPacketQueue>* readQueues, 
+STAGE_SCHED_Queue::qFillSel(std::vector<MemPacketQueue>*      readQueues, 
                                  std::vector<MemPacketQueue>* writeQueues,
                                  PacketPtr pkt,
-                                 uint32_t burst_size){
+                                 uint32_t  burst_size){
 
     int curCpuId = pkt->req->cpuId;
     if ( curCpuId >= 0){
@@ -268,15 +273,18 @@ STAGE_SCHED_Queue::qSchedFill(std::vector<MemPacketQueue>* queues,
     std::vector<batchState>* relatedStages;
     state*                   relatedState;
     uint8_t*                 relatedSeletedStageNum;// if exploit state if not it can be anythings
+    uint8_t*                 relatedSeletedLastRR;
 
     if (read){
         relatedStages          = &readStages;
         relatedState           = &ReadCmdStatus;
         relatedSeletedStageNum = &selectedReadStage;
+        relatedSeletedLastRR   = &selectedlastReadStage_RR;
     }else{
         relatedStages          = &writeStages;
         relatedState           = &WriteCmdStatus;
         relatedSeletedStageNum = &selectedWriteStage;
+        relatedSeletedLastRR   = &selectedlastWriteStage_RR;
     }
 
     // return template
@@ -284,25 +292,32 @@ STAGE_SCHED_Queue::qSchedFill(std::vector<MemPacketQueue>* queues,
     //////////////////////////
 
     if (*relatedState == state::exploiting){
-
         // return that state
+        assert(!(*queues)[*relatedSeletedStageNum].empty());
         ret.push_back(&((*queues)[*relatedSeletedStageNum])); // for now it is cpu id
     }else if ( *relatedState == state::wait4Sel ){
         //select new stage
         // use lottery
         StagePolicy next_policy = genlotto();
         if (next_policy == StagePolicy::rr){
-
-            uint8_t nextStage = ((*relatedSeletedStageNum) + 1)%numStages;
-            while( nextStage !=  *relatedSeletedStageNum){
+            algo_stats.selectedByRR++;
+            uint8_t nextStage = (uint8_t)((((uint16_t)(*relatedSeletedLastRR)) + 1)%numStages);
+            
+            while( nextStage !=  *relatedSeletedLastRR){
                 if ((*relatedStages)[nextStage].startBatchId < (*relatedStages)[nextStage].lastBatchId){
                     ret.push_back(&(*queues)[nextStage]);
                     *relatedSeletedStageNum = nextStage;
+                    *relatedSeletedLastRR   = nextStage;
                     break;
                 }
+                assert((*queues)[nextStage].empty());
+                nextStage++;
+                nextStage %= numStages;
             }
         }else if (next_policy == StagePolicy::sjf){
-            uint8_t nextStage = 0;
+            algo_stats.selectedBySJF++;
+
+            uint8_t  nextStage = 0;
             uint8_t  ans_stage = nextStage;
             uint64_t ans_amt   = UINT64_MAX;
 
@@ -315,8 +330,9 @@ STAGE_SCHED_Queue::qSchedFill(std::vector<MemPacketQueue>* queues,
                     }
                 }
             }
-            *relatedSeletedStageNum = nextStage;
+            *relatedSeletedStageNum = ans_stage;
             ret.push_back(&(*queues)[ans_stage]);
+
         }else{
             panic("unknow scheduling policy\n");
         }
@@ -333,7 +349,7 @@ STAGE_SCHED_Queue::qSchedFill(std::vector<MemPacketQueue>* queues,
 }
 
 void
-STAGE_SCHED_Queue::notifySelect(MemPacket* mempkt, bool is_read,
+STAGE_SCHED_Queue::notifySelect(MemPacket* mempkt, bool is_read, // mempkt is null when no one is selected
                           std::vector<MemPacketQueue>* queues
 ){
     std::vector<batchState>* relatedStages;
@@ -351,16 +367,25 @@ STAGE_SCHED_Queue::notifySelect(MemPacket* mempkt, bool is_read,
     }
 
     if ( mempkt ){
+        algo_stats.batchHit++;
+        uint64_t& batchSizeRef = (*relatedStages)[*relatedSeletedStageNum]
+                                .batchMap[mempkt->batchId];
+        assert( batchSizeRef >= 1);
 
-    uint64_t& batchSizeRef = (*relatedStages)[*relatedSeletedStageNum]
-                             .batchMap[mempkt->batchId];
-    assert( batchSizeRef >= 1);
+        if (batchSizeRef >= 2){
+            *relatedState =  state::exploiting;
+        }else if ( batchSizeRef == 1 ){
+            *relatedState = state::wait4Sel;
+            (*relatedStages)[*relatedSeletedStageNum].startBatchId++;
 
-    *relatedState = (batchSizeRef >= 2) ? state::exploiting :
-                                          state::wait4Sel;
-    batchSizeRef-=1;
+        }else{
+            assert(0);
+        }
+        
+        batchSizeRef-=1;
     }else{
-        *relatedState =  (*queues)[*relatedSeletedStageNum].empty() ? state::exploiting : state::wait4Sel;
+        algo_stats.batchMiss++;
+        *relatedState =  ( !(*queues)[*relatedSeletedStageNum].empty() ) ? state::exploiting : state::wait4Sel;
     }
 }
 
@@ -377,11 +402,19 @@ STAGE_SCHED_Queue::push_to_queue(MemPacket* mempkt,
     std::vector<batchState>* relatedStages = is_read ? &readStages 
                                                      : &writeStages;
 
+    // update stat to track max size of each stage in each rw
+    if (is_read){
+            algo_stats.maxSizeReadQueue.sample( (*queues)[qid].size() );
+    }else{
+            algo_stats.maxSizeWriteQueue.sample( (*queues)[qid].size() );
+    }
 
     assert(qid <= queues->size());
 
+    batchState* curbatchState = &((*relatedStages)[qid]);
 
     if (!(*queues)[qid].empty()){
+        assert( curbatchState->startBatchId < curbatchState->lastBatchId );
         MemPacket* lastMemPkt = (*queues)[qid].back();
         if ( dram->isSameRow(lastMemPkt, mempkt) ){
              AssignNewBatch = false;
@@ -389,10 +422,13 @@ STAGE_SCHED_Queue::push_to_queue(MemPacket* mempkt,
     }
 
 
-    batchState* curbatchState = &((*relatedStages)[qid]);
     if (AssignNewBatch){
+        
+        algo_stats.startNewBatch[qid]++;
+
         if ((*queues)[qid].empty()){
             //restart that statge
+            assert( curbatchState->startBatchId == curbatchState->lastBatchId );
             mempkt->batchId = 0; // assign batch id
             curbatchState->batchMap.clear();// clear map
             curbatchState->batchMap[0]  = 1; // 1 packet in first batch
@@ -405,29 +441,55 @@ STAGE_SCHED_Queue::push_to_queue(MemPacket* mempkt,
             curbatchState->lastBatchId++; // 1 packet in first batch
         }
     }else{
+        algo_stats.exploitBatch[qid]++;
         // no change last batch 
-        assert(curbatchState->startBatchId < curbatchState->lastBatchId);
+        assert(curbatchState->startBatchId != curbatchState->lastBatchId);
         mempkt->batchId = curbatchState->lastBatchId-1;
         curbatchState->batchMap[curbatchState->lastBatchId-1]++;
     }
 
-    
 
-
+    (*queues)[qid].push_back(mempkt);
 
 }
 
 STAGE_SCHED_Queue::StagePolicy
-
 STAGE_SCHED_Queue::genlotto(){
     uint8_t lot = (uint8_t)(rand() % max_lotto);
     return (lot <= rr_max_lotto) ? StagePolicy::rr : StagePolicy::sjf;
 }
 
+bool
+STAGE_SCHED_Queue::readQueueFull(
+    unsigned int neededEntries,
+    std::vector<MemPacketQueue>* read_queues,
+    int qid
+){
+    assert(qid < numStages);
+    uint64_t totalSize = neededEntries + (*read_queues)[qid].size();
+    return totalSize >= maxReadStageSize;
+}
+
+bool
+STAGE_SCHED_Queue::writeQueueFull(
+    unsigned int neededEntries,
+    std::vector<MemPacketQueue>* write_queues,
+    int qid
+){
+    assert(qid < numStages);
+    uint64_t totalSize = neededEntries + (*write_queues)[qid].size();
+    return totalSize >= maxWriteStageSize;
+}
+
+
 STAGE_SCHED_Queue::STAGE_SCHED_Queue(const STAGE_SCHED_QueueParams &p):
 numStages(p.numStages),
 rr_max_lotto(p.rr_max_lotto),
-max_lotto(p.max_lotto)
+max_lotto(p.max_lotto),
+InterQueue(p),
+algo_stats(*this),
+maxReadStageSize(p.maxReadStageSize),
+maxWriteStageSize(p.maxWriteStageSize)
 {
     readStages.resize(numStages);
     writeStages.resize(numStages);
@@ -435,7 +497,62 @@ max_lotto(p.max_lotto)
     WriteCmdStatus      = state::wait4Sel;
     selectedReadStage   = 0;
     selectedWriteStage  = 0;
+    selectedlastReadStage_RR =  0;
+    selectedlastWriteStage_RR = 0;
 }
+
+
+STAGE_SCHED_Queue::STAGE_SCHED_Stats::STAGE_SCHED_Stats(STAGE_SCHED_Queue& ITQ):
+statistics::Group(& ITQ),
+STAGEQueueOwner(ITQ),
+ADD_STAT(selectedByRR,
+         statistics::units::Count::get(),
+         "amount of times that scheduler select by using rubin"
+        ),
+ADD_STAT(
+        selectedBySJF,
+        statistics::units::Count::get(),
+        "amount of times that scheduler select by using short job first"
+        ),
+ADD_STAT(
+        batchMiss,
+        statistics::units::Count::get(),
+        "number of time that dram is not ready in all selected batch when scheduler need to select"
+        ),
+ADD_STAT(
+        batchHit,
+        statistics::units::Count::get(),
+        "number of time that dram is not ready in all selected batch when scheduler need to select"
+        ),
+ADD_STAT(exploitBatch,
+         statistics::units::Count::get(),
+         "amount of packet that can tie within the last of fifo stage"),
+ADD_STAT(startNewBatch,
+         statistics::units::Count::get(),
+         "amount of packet that must assign new batch number"),
+ADD_STAT(
+        maxSizeWriteQueue,
+        statistics::units::Count::get(),
+        "max size of mempacket that fill in each write queue"),
+ADD_STAT(
+        maxSizeReadQueue,
+        statistics::units::Count::get(),
+        "max size of mempacket that fill in each read queue")
+{
+}
+
+void 
+STAGE_SCHED_Queue::STAGE_SCHED_Stats::regStats(){
+        using namespace statistics;
+        exploitBatch .init    (STAGEQueueOwner.numStages);
+        startNewBatch.init    (STAGEQueueOwner.numStages);
+        maxSizeWriteQueue.init(STAGEQueueOwner.maxWriteStageSize+10).flags(nozero);
+        maxSizeReadQueue .init(STAGEQueueOwner.maxReadStageSize +10).flags(nozero);
+
+
+}
+
+
 
 }
 

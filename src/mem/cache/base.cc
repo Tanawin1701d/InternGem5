@@ -404,7 +404,7 @@ BaseCache::recvTimingReq(PacketPtr pkt)
     }
 
     if (blk != nullptr){
-        blk->cpuId = pkt->req->cpuId;
+        blk->cpuId       = pkt->req->cpuId;
         blk->fromNetwork = pkt->req->fromNetwork;
     }
 

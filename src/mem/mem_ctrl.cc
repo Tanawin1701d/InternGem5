@@ -182,26 +182,40 @@ MemCtrl::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
 }
 
 bool
-MemCtrl::readQueueFull(unsigned int neededEntries) const
+MemCtrl::readQueueFull(unsigned int neededEntries, uint8_t cpuId)
 {
     DPRINTF(MemCtrl,
             "Read queue limit %d, current size %d, entries needed %d\n",
             readBufferSize, totalReadQueueSize + respQueue.size(),
             neededEntries);
 
-    auto rdsize_new = totalReadQueueSize + respQueue.size() + neededEntries;
-    return rdsize_new > readBufferSize;
+    if (iterQSchedPolicy == enums::iterQSched::STAGE){
+        assert(iterSched);
+        auto stageClass = (STAGE_SCHED_Queue*)iterSched;
+        return stageClass->readQueueFull(neededEntries, &readQueue, cpuId);
+    }else if (!iterSched){
+        auto rdsize_new = totalReadQueueSize + respQueue.size() + neededEntries;
+        return rdsize_new > readBufferSize;
+    }
+    panic("no algorithm to check wheather readQueue is full or not\n");
+    
 }
 
 bool
-MemCtrl::writeQueueFull(unsigned int neededEntries) const
+MemCtrl::writeQueueFull(unsigned int neededEntries, uint8_t cpuId)
 {
     DPRINTF(MemCtrl,
             "Write queue limit %d, current size %d, entries needed %d\n",
             writeBufferSize, totalWriteQueueSize, neededEntries);
-
-    auto wrsize_new = (totalWriteQueueSize + neededEntries);
-    return  wrsize_new > writeBufferSize;
+    if (iterQSchedPolicy == enums::iterQSched::STAGE){
+        assert(iterSched);
+        auto stageClass = (STAGE_SCHED_Queue*)iterSched;
+        return stageClass->writeQueueFull(neededEntries, &writeQueue, cpuId);
+    }else if (!iterSched){
+        auto wrsize_new = (totalWriteQueueSize + neededEntries);
+        return  wrsize_new > writeBufferSize;
+    }
+    panic("no algorithm to check wheather writeQueue is full or not\n");
 }
 
 void
@@ -263,7 +277,7 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
 
         // If not found in the write q, make a memory packet and
         // push it onto the read queue
-        if (!foundInWrQ) {
+        if (true) {
 
             // Make the burst helper for split packets
             if (pkt_count > 1 && burst_helper == NULL) {
@@ -308,7 +322,7 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
                                          true,
                                          mem_pkt->qosValue(),
                                          dram
-                )
+                );
             }else{
                 readQueue[mem_pkt->qosValue()].push_back(mem_pkt);
             }
@@ -326,10 +340,11 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
     }
 
     // If all packets are serviced by write queue, we send the repsonse back
-    if (pktsServicedByWrQ == pkt_count) {
-        accessAndRespond(pkt, frontendLatency);
-        return;
-    }
+
+    // if (pktsServicedByWrQ == pkt_count) {
+    //     accessAndRespond(pkt, frontendLatency);
+    //     return;
+    // }
 
     // Update how many split packets are serviced by write queue
     if (burst_helper != NULL)
@@ -372,7 +387,7 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
 
         // if the item was not merged we need to create a new write
         // and enqueue it
-        if (!merged) {
+        if (true) {
             MemPacket* mem_pkt;
             if (is_dram) {
                 mem_pkt = dram->decodePacket(pkt, addr, size, false, true);
@@ -405,7 +420,7 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
                                         false,
                                         mem_pkt->qosValue(),
                                         dram
-                )
+                );
             }else{
                 writeQueue[mem_pkt->qosValue()].push_back(mem_pkt);
             }
@@ -415,7 +430,7 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             logRequest(MemCtrl::WRITE, pkt->requestorId(), pkt->qosValue(),
                        mem_pkt->addr, 1);
 
-            assert(totalWriteQueueSize == isInWriteQueue.size());
+            //assert(totalWriteQueueSize == isInWriteQueue.size());
 
             // Update stats
             stats.avgWrQLen = totalWriteQueueSize;
@@ -488,17 +503,24 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
              "Should only see read and writes at memory controller\n");
 
     /////////////////////////////////////////////////////////////////////////
+    int stCpuid = pkt->req->cpuId;
      if (pkt->req->fromNetwork){
                 DPRINTF(passingTest,  "this come from network=============== %d\n", pkt->req->cpuId );
                 stats.network++;
+                stats.pktNetWork[ (stCpuid >= 0) ? stCpuid : numPriorities() ]++;
     }else{
                 DPRINTF(passingTest,  "this come from cpuid  %d\n", pkt->req->cpuId );
                 stats.cpu++;
+                stats.pktCpus[ (stCpuid >= 0) ? stCpuid : numPriorities() ]++;
+                if (stCpuid < 0){
+                    assert(pkt->cmd == MemCmd::WritebackClean || pkt->cmd == MemCmd::WritebackDirty);
+                }
     }
 
     assert(pkt->req);
     pkt->fromNetwork = pkt->req->fromNetwork;
-    pkt->cpuId = pkt->req->cpuId;    
+    pkt->cpuId = pkt->req->cpuId;
+    stCpuid = (stCpuid < 0 ) ? 0 : stCpuid;
     ///////////////////////////////////////////////////////////////////////////
     // Calc avg gap between requests
     if (prevArrival != 0) {
@@ -537,7 +559,7 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
     // check local buffers and do not accept if full
     if (pkt->isWrite()) {
         assert(size != 0);
-        if (writeQueueFull(pkt_count)) {
+        if (writeQueueFull(pkt_count, (uint8_t)stCpuid)) {
             DPRINTF(MemCtrl, "Write queue full, not accepting\n");
             // remember that we have to retry this port
             retryWrReq = true;
@@ -551,7 +573,7 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
     } else {
         assert(pkt->isRead());
         assert(size != 0);
-        if (readQueueFull(pkt_count)) {
+        if (readQueueFull(pkt_count, (uint8_t)stCpuid)) {
             DPRINTF(MemCtrl, "Read queue full, not accepting\n");
             // remember that we have to retry this port
             retryRdReq = true;
@@ -656,7 +678,17 @@ MemCtrl::chooseNext(MemPacketQueue& queue, Tick extra_col_delay)
                     break;
                 }
             }
-        } else if (memSchedPolicy == enums::frfcfs) {
+        }else if ( memSchedPolicy == enums::STAGEfcfs){
+            if (queue.size() >= 1){
+                MemPacket* mem_pkt = *(queue.begin());
+                if (packetReady(mem_pkt)) {
+                    ret = queue.begin();
+                    DPRINTF(MemCtrl, "STAGE FCFS Single request, going to a free rank\n");
+                } else {
+                    DPRINTF(MemCtrl, "STAGE FCFS Single request, going to a busy rank\n");
+                }
+            }
+        }else if (memSchedPolicy == enums::frfcfs) {
             ret = chooseNextFRFCFS(queue, extra_col_delay);
         } else if ( memSchedPolicy == enums::fcfsNR ){
             ret = dram->chooseNextFCFSNRE(queue);
@@ -1115,7 +1147,7 @@ MemCtrl::processNextReqEvent()
 
             }
 
-            iterSched->notifySelect(*to_read, true, &readQueue);
+            iterSched->notifySelect(read_found ? *to_read : nullptr, true, &readQueue);
 
             // if no read to an available rank is found then return
             // at this point. There could be writes to the available ranks
@@ -1235,7 +1267,7 @@ MemCtrl::processNextReqEvent()
 
         }
         
-        iterSched->notifySelect(*to_write, false, &writeQueue);
+        iterSched->notifySelect(write_found ? *to_write : nullptr, false, &writeQueue);
 
         // if there are no writes to a rank that is available to service
         // requests (i.e. rank is in refresh idle state) are found then
@@ -1436,7 +1468,10 @@ MemCtrl::CtrlStats::CtrlStats(MemCtrl &_ctrl)
     ADD_STAT(network, statistics::units::Count::get(), "amount of network packets in memory ctrl"),
     ADD_STAT(cpu, statistics::units::Count::get(), "amount of cpu packets in memory ctrl"),
     ADD_STAT(mempktNetwork,statistics::units::Count::get(), "amount of packet that come from network which split to mempkt"),
-    ADD_STAT(mempktCpu,statistics::units::Count::get(), "amount of packet that come from cpu which split to mempkt")
+    ADD_STAT(mempktCpu,statistics::units::Count::get(), "amount of packet that come from cpu which split to mempkt"),
+    
+    ADD_STAT(pktNetWork,statistics::units::Count::get(),"amount packet come from cpu"),
+    ADD_STAT(pktCpus,statistics::units::Count::get(),"amount packet come from network")
            
 {
 }
@@ -1535,6 +1570,10 @@ MemCtrl::CtrlStats::regStats()
     requestorWriteRate = requestorWriteBytes / simSeconds;
     requestorReadAvgLat = requestorReadTotalLat / requestorReadAccesses;
     requestorWriteAvgLat = requestorWriteTotalLat / requestorWriteAccesses;
+
+    pktNetWork.init(ctrl.numPriorities()+1);
+    pktCpus.init   (ctrl.numPriorities()+1);
+
 }
 
 void

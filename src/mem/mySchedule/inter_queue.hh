@@ -56,7 +56,7 @@ namespace memory
                                 std::vector<MemPacketQueue>* writeQueues);
         //static InterQueue* creator(enums::iterQSched  iterPolicy);
 
-        void push_to_queue(MemPacket* mempkt,
+        virtual void push_to_queue(MemPacket* mempkt,
                           std::vector<MemPacketQueue>* queues,
                           std::vector<MemPacketQueue>* opsiteQueue,
                           bool                         is_read,
@@ -132,9 +132,33 @@ namespace memory
     };
 
     class STAGE_SCHED_Queue : public InterQueue{
+        friend struct STAGE_SCHED_Stats;
         public:
             typedef uint64_t BATCHID;
         private:
+        //stat///////////////////////////////////////////
+        struct STAGE_SCHED_Stats : public statistics::Group
+        {
+            STAGE_SCHED_Stats(STAGE_SCHED_Queue& ITQ);
+            void regStats() override;
+            STAGE_SCHED_Queue& STAGEQueueOwner;
+
+            statistics::Scalar selectedByRR;
+            statistics::Scalar selectedBySJF;
+            statistics::Scalar batchMiss;
+            statistics::Scalar batchHit;
+            statistics::Scalar amountPkt;
+            statistics::Vector exploitBatch;
+            statistics::Vector startNewBatch;
+            statistics::Histogram maxSizeWriteQueue;
+            statistics::Histogram maxSizeReadQueue;
+
+            
+        };
+
+
+        STAGE_SCHED_Stats algo_stats;
+        ////////////////////////////////////////////////
             typedef uint8_t  QUEUEID;
             enum state {exploiting, wait4Sel};
             enum StagePolicy {rr, sjf};
@@ -144,17 +168,21 @@ namespace memory
             struct batchState{
                 BATCHID startBatchId = 0;
                 BATCHID lastBatchId = 0;
-                std::unordered_map<BATCHID, uint64_t> batchMap;
+                std::unordered_map <BATCHID, uint64_t> batchMap;
             };
 
-            uint8_t numStages;
-            uint8_t rr_max_lotto;
-            uint8_t max_lotto;
+            uint8_t  numStages;
+            uint64_t maxReadStageSize;
+            uint64_t maxWriteStageSize;
+            uint8_t  rr_max_lotto;
+            uint8_t  max_lotto;
 
             std::vector<batchState> readStages;
             std::vector<batchState> writeStages;
             state                   ReadCmdStatus;
             state                   WriteCmdStatus;
+            uint8_t                 selectedlastReadStage_RR;
+            uint8_t                 selectedlastWriteStage_RR;
             uint8_t                 selectedReadStage;
             uint8_t                 selectedWriteStage;
 
@@ -173,15 +201,24 @@ namespace memory
                                   std::vector<MemPacketQueue>* queues);
 
         // must have for this 
-        void push_to_queue(MemPacket* mempkt,
-                          std::vector<MemPacketQueue>* queues,
+        void push_to_queue(MemPacket*                  mempkt     ,
+                          std::vector<MemPacketQueue>* queues     ,
                           std::vector<MemPacketQueue>* opsiteQueue,
-                          bool                         is_read,
-                          uint8_t                      qid,
+                          bool                         is_read    ,
+                          uint8_t                      qid        ,
                           DRAMInterface*               dram
                           );
     
         StagePolicy genlotto();
+
+        bool readQueueFull(unsigned int neededEntries,
+                           std::vector<MemPacketQueue>* read_queues,
+                           int qid
+                          );
+        bool writeQueueFull(unsigned int neededEntries,
+                           std::vector<MemPacketQueue>* write_queues,
+                           int qid
+                           );
 
         STAGE_SCHED_Queue(const STAGE_SCHED_QueueParams &p);
 

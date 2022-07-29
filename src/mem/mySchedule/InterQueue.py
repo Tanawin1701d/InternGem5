@@ -33,6 +33,8 @@ class STAGE_SCHED_Queue(InterQueue):
     numStages    = Param.Unsigned(4, "number of stage (typically n(cores+network pe))")
     rr_max_lotto = Param.Unsigned(50, "amount that loto that was given to round-rubin policy")
     max_lotto    = Param.Unsigned(100, "amount that loto that was given to round-rubin policy")
+    maxReadStageSize = Param.Unsigned(128, "amount that loto that was given to round-rubin policy")
+    maxWriteStageSize = Param.Unsigned(512, "amount that loto that was given to round-rubin policy")
 
 
 

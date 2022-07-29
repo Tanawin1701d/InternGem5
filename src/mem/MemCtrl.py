@@ -48,8 +48,8 @@ from m5.objects.InterQueue  import *
 
 # Enum for memory scheduling algorithms, currently First-Come
 # First-Served and a First-Row Hit then First-Come First-Served
-class MemSched(Enum)  : vals = ['fcfs', 'frfcfs', 'fcfsNR', 'rr', 'fnfrfcfs']
-class iterQSched(Enum): vals = ['single']
+class MemSched(Enum)  : vals = ['fcfs', 'frfcfs', 'fcfsNR', 'rr', 'fnfrfcfs','STAGEfcfs']
+class iterQSched(Enum): vals = ['single', 'STAGE']
 
 
 # MemCtrl is a single-channel single-ported Memory controller model
