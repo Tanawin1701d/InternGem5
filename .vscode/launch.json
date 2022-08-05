@@ -13,13 +13,13 @@
                 "configs/learning_gem5/newBench.py" ,
                 "--cmd='/home/tanawin/Work/Hwsim/netBench/cmake-build-debug/netBench1;/home/tanawin/Work/Hwsim/netBench/cmake-build-debug/netBench1'",
                 "--cpu-type=DerivO3CPU" ,
-                "--l1d_size=64kB",
-                "--l1i_size=16kB",
+                "--l1d_size=1MB",
+                "--l1i_size=1MB",
                 "--caches",
                 "-n 2 ",
-                "--interQmemSched=STAGE_SCHED_Queue",
-                "--memSched=STAGEfcfs",
-                "--interQmemSizeHelp=STAGE"
+                // "--interQmemSched=STAGE_SCHED_Queue",
+                // "--memSched=STAGEfcfs",
+                // "--interQmemSizeHelp=STAGE"
 
             ],
             "stopAtEntry": false,

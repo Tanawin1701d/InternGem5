@@ -1,11 +1,11 @@
 Import('*')
 
 SimObject('myScheduler.py', sim_objects=['myScheduler'])
-SimObject('InterQueue.py', sim_objects=['InterQueue', 
-                                        'SimpleQueue',
-                                        'ALGO_WF_Queue',
-                                        'ALGO_NETQ_Queue',
-                                        'STAGE_SCHED_Queue'
+SimObject('InterQueue.py', sim_objects=['InterQueue'
+                                        # 'SimpleQueue',
+                                        # 'ALGO_WF_Queue',
+                                        # 'ALGO_NETQ_Queue',
+                                        ,'STAGE_SCHED_Queue'
                                         ]) #, enums=['iterQSched'])
 
 

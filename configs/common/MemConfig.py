@@ -224,14 +224,20 @@ def config_mem(options, system):
 
                 # Create the controller that will drive the interface
                 mem_ctrl = dram_intf.controller()
+                mem_ctrl.iterQSizePerRW      = options.num_cpus
+                mem_ctrl.qos_priorities      = options.num_cpus
                 #############################################################
                 mem_ctrl.mem_sched_policy = opt_mem_sched
-                mem_ctrl.iterSched        = ObjectList.ObjectList(getattr(m5.objects, 'InterQueue', None)).get(opt_mem_sched_iter)()
                 mem_ctrl.inter_QSched_policy =  opt_mem_sched_iter_sizeHelp
                 if (opt_mem_sched_iter == "ALGO_NETQ_Queue"):
+                    mem_ctrl.iterSched        = ObjectList.ObjectList(getattr(m5.objects, 'InterQueue', None)).get(opt_mem_sched_iter)()
                     mem_ctrl.iterSched.NetAwareThds = opt_mem_sched_net_acc
                 elif(opt_mem_sched_iter == "STAGE_SCHED_Queue"):
-                    mem_ctrl.iterSched.numStages = options.num_cpus
+                    mem_ctrl.iterSched        = ObjectList.ObjectList(getattr(m5.objects, 'InterQueue', None)).get(opt_mem_sched_iter)()
+                    mem_ctrl.iterSched.stage1_amtSrc = options.num_cpus
+                    mem_ctrl.iterSched.stage3_sizePerBank = 1024
+                    mem_ctrl.iterSched.stage1_sizePerSrc = 1024
+                    mem_ctrl.iterSched.stage1_FORMATION_THRED = "50ns"
                     mem_ctrl.iterQSizePerRW      = options.num_cpus
                     mem_ctrl.qos_priorities      = options.num_cpus
                     

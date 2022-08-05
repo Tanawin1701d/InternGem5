@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Fri Jul 29 10:05:48 2022
+# Make data base, printed on Fri Aug  5 20:19:57 2022
 
 # Variables
 
@@ -45,11 +45,11 @@ CURDIR := /home/tanawin/Work/Hwsim/InternGem5
 # makefile
 SHELL = /bin/sh
 # environment
-SNAP_DATA = /var/snap/code/102
+SNAP_DATA = /var/snap/code/103
 # environment
 VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupport":true}
 # environment
-JOURNAL_STREAM = 8:50346
+JOURNAL_STREAM = 8:53740
 # environment
 XDG_CONFIG_DIRS = /etc/xdg/xdg-ubuntu:/etc/xdg
 # environment
@@ -71,9 +71,9 @@ XDG_DATA_DIRS = /usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/d
 # environment
 DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
 # environment
-_ = /snap/code/102/usr/share/code/code
+_ = /snap/code/103/usr/share/code/code
 # environment
-MANAGERPID = 2611
+MANAGERPID = 4248
 # environment
 LESSOPEN = | /usr/bin/lesspipe %s
 # environment
@@ -81,7 +81,7 @@ LC_NAME = th_TH.UTF-8
 # environment
 VSCODE_CWD = /home/tanawin
 # environment
-GSETTINGS_SCHEMA_DIR = /snap/code/102/usr/share/glib-2.0/schemas
+GSETTINGS_SCHEMA_DIR = /snap/code/103/usr/share/glib-2.0/schemas
 # default
 MAKE_HOST := x86_64-pc-linux-gnu
 # environment
@@ -89,15 +89,15 @@ PATH = /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/
 # environment
 GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
 # environment
-SESSION_MANAGER = local/kathryn:@/tmp/.ICE-unix/2835,unix/kathryn:/tmp/.ICE-unix/2835
+SESSION_MANAGER = local/kathryn:@/tmp/.ICE-unix/4459,unix/kathryn:/tmp/.ICE-unix/4459
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
 GDK_PIXBUF_MODULE_FILE = /home/tanawin/snap/code/common/.cache/gdk-pixbuf-loaders.cache
 # environment
-SNAP = /snap/code/102
+SNAP = /snap/code/103
 # environment
-SNAP_VERSION = 3b889b09
+SNAP_VERSION = da76f933
 # environment
 XDG_MENU_PREFIX = gnome-
 # environment
@@ -105,9 +105,9 @@ DISABLE_WAYLAND = 1
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-INVOCATION_ID = 882e659a66d34b52ac362d78ee1f8cca
+INVOCATION_ID = 0f96d60121be4e0c903b6dcbcf22e8cd
 # environment
-GDK_PIXBUF_MODULEDIR = /snap/code/102/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
+GDK_PIXBUF_MODULEDIR = /snap/code/103/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
 # environment
@@ -117,7 +117,7 @@ XDG_SESSION_DESKTOP = ubuntu
 # environment
 SSH_AUTH_SOCK = /run/user/1000/keyring/ssh
 # environment
-GIO_LAUNCHED_DESKTOP_FILE_PID = 11829
+GIO_LAUNCHED_DESKTOP_FILE_PID = 180400
 # automatic
 %F = $(notdir $%)
 # environment
@@ -129,7 +129,7 @@ PWD = /home/tanawin/Work/Hwsim/InternGem5
 # default
 .LOADED := 
 # environment
-SSH_AGENT_PID = 2790
+SSH_AGENT_PID = 4424
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = ubuntu:GNOME
 # environment
@@ -143,7 +143,7 @@ LESSCLOSE = /usr/bin/lesspipe %s %s
 # environment
 VSCODE_CLI = 1
 # environment
-VSCODE_CODE_CACHE_PATH = /home/tanawin/.config/Code/CachedData/3b889b090b5ad5793f524b5d1d39fda662b96a2a
+VSCODE_CODE_CACHE_PATH = /home/tanawin/.config/Code/CachedData/da76f93349a72022ca4670c1b84860304616aaa2
 # environment
 LOGNAME = tanawin
 # environment
@@ -175,7 +175,7 @@ MAKECMDGOALS := all
 # environment
 QT_IM_MODULE = ibus
 # environment
-SNAP_USER_DATA = /home/tanawin/snap/code/102
+SNAP_USER_DATA = /home/tanawin/snap/code/103
 # environment
 SHLVL = 0
 # environment
@@ -185,7 +185,7 @@ MAKE_VERSION := 4.2.1
 # environment
 USER = tanawin
 # environment
-SNAP_REVISION = 102
+SNAP_REVISION = 103
 # environment
 LC_MONETARY = th_TH.UTF-8
 # makefile
@@ -203,7 +203,7 @@ MAKE_COMMAND := make
 # automatic
 *F = $(notdir $*)
 # environment
-VSCODE_IPC_HOOK = /run/user/1000/vscode-6d7d93d9-1.69.2-main.sock
+VSCODE_IPC_HOOK = /run/user/1000/vscode-6d7d93d9-1.70.0-main.sock
 # environment
 BAMF_DESKTOP_FILE_HINT = /var/lib/snapd/desktop/applications/code_code.desktop
 # makefile
@@ -261,7 +261,7 @@ LC_ADDRESS = th_TH.UTF-8
 # environment
 LANG = C
 # environment
-VSCODE_PID = 11893
+VSCODE_PID = 180453
 # variable set hash-table stats:
 # Load=125/1024=12%, Rehash=0, Collisions=22/147=15%
 
@@ -330,6 +330,6 @@ GNUmakefile:
 # strcache performance: lookups = 43 / hit rate = 6%
 # hash-table stats:
 # Load=40/8192=0%, Rehash=0, Collisions=1/43=2%
-# Finished Make data base on Fri Jul 29 10:05:48 2022
+# Finished Make data base on Fri Aug  5 20:19:57 2022
 
  

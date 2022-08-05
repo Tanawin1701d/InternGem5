@@ -105,6 +105,8 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
 
     myShed->owner = this;
     myShed->dram  = dram;
+    if (iterSched)
+        iterSched->mctrl = this;
     //iterSched->setQ(&readQueue, &writeQueue);
 }
 
@@ -189,11 +191,9 @@ MemCtrl::readQueueFull(unsigned int neededEntries, uint8_t cpuId)
             readBufferSize, totalReadQueueSize + respQueue.size(),
             neededEntries);
 
-    if (iterQSchedPolicy == enums::iterQSched::STAGE){
-        assert(iterSched);
-        auto stageClass = (STAGE_SCHED_Queue*)iterSched;
-        return stageClass->readQueueFull(neededEntries, &readQueue, cpuId);
-    }else if (!iterSched){
+    if (iterSched){
+        return iterSched->readQueueFull(neededEntries, cpuId);
+    }else{
         auto rdsize_new = totalReadQueueSize + respQueue.size() + neededEntries;
         return rdsize_new > readBufferSize;
     }
@@ -207,11 +207,9 @@ MemCtrl::writeQueueFull(unsigned int neededEntries, uint8_t cpuId)
     DPRINTF(MemCtrl,
             "Write queue limit %d, current size %d, entries needed %d\n",
             writeBufferSize, totalWriteQueueSize, neededEntries);
-    if (iterQSchedPolicy == enums::iterQSched::STAGE){
-        assert(iterSched);
-        auto stageClass = (STAGE_SCHED_Queue*)iterSched;
-        return stageClass->writeQueueFull(neededEntries, &writeQueue, cpuId);
-    }else if (!iterSched){
+    if (iterSched){
+        return iterSched->writeQueueFull(neededEntries, cpuId);
+    }else{
         auto wrsize_new = (totalWriteQueueSize + neededEntries);
         return  wrsize_new > writeBufferSize;
     }
@@ -253,31 +251,48 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
         Addr burst_addr = burstAlign(addr, is_dram);
         // if the burst address is not present then there is no need
         // looking any further
-        if (isInWriteQueue.find(burst_addr) != isInWriteQueue.end()) {
-            for (const auto& vec : writeQueue) {
-                for (const auto& p : vec) {
-                    // check if the read is subsumed in the write queue
-                    // packet we are looking at
-                    if (p->addr <= addr &&
-                       ((addr + size) <= (p->addr + p->size))) {
 
-                        foundInWrQ = true;
+        if (isInWriteQueue.find(burst_addr) != isInWriteQueue.end()) {
+            // service by write queue for interq scheduler
+            if (iterSched){
+
+                    if (iterSched->serveByWriteQueue(addr, size) ){
                         stats.servicedByWrQ++;
+                        foundInWrQ = true;
                         pktsServicedByWrQ++;
-                        DPRINTF(MemCtrl,
-                                "Read to addr %#x with size %d serviced by "
-                                "write queue\n",
-                                addr, size);
                         stats.bytesReadWrQ += burst_size;
-                        break;
+
+
+                    }
+                    
+
+            }else{
+
+                for (const auto& vec : writeQueue) {
+                    for (const auto& p : vec) {
+                        // check if the read is subsumed in the write queue
+                        // packet we are looking at
+                        if (p->addr <= addr &&
+                           ((addr + size) <= (p->addr + p->size))) {
+                            foundInWrQ = true;
+                            stats.servicedByWrQ++;
+                            pktsServicedByWrQ++;
+                            DPRINTF(MemCtrl,
+                                    "Read to addr %#x with size %d serviced by "
+                                    "write queue\n",
+                                    addr, size);
+                            stats.bytesReadWrQ += burst_size;
+                            break;
+                        }
                     }
                 }
+
             }
         }
 
         // If not found in the write q, make a memory packet and
         // push it onto the read queue
-        if (true) {
+        if (!foundInWrQ) {
 
             // Make the burst helper for split packets
             if (pkt_count > 1 && burst_helper == NULL) {
@@ -316,13 +331,7 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             }
             
             if (iterSched){
-                iterSched->push_to_queue(mem_pkt,
-                                         &readQueue,
-                                         &writeQueue,
-                                         true,
-                                         mem_pkt->qosValue(),
-                                         dram
-                );
+                iterSched->pushToQueues(mem_pkt, true);
             }else{
                 readQueue[mem_pkt->qosValue()].push_back(mem_pkt);
             }
@@ -341,10 +350,10 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
 
     // If all packets are serviced by write queue, we send the repsonse back
 
-    // if (pktsServicedByWrQ == pkt_count) {
-    //     accessAndRespond(pkt, frontendLatency);
-    //     return;
-    // }
+    if (pktsServicedByWrQ == pkt_count) {
+        accessAndRespond(pkt, frontendLatency);
+        return;
+    }
 
     // Update how many split packets are serviced by write queue
     if (burst_helper != NULL)
@@ -352,7 +361,11 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
 
     // If we are not already scheduled to get a request out of the
     // queue, do so now
-    if (!nextReqEvent.scheduled()) {
+
+
+    if ( (!nextReqEvent.scheduled() ) && 
+         (iterQSchedPolicy != enums::iterQSched::STAGE)  
+       ) {
         DPRINTF(MemCtrl, "Request scheduled immediately\n");
         schedule(nextReqEvent, curTick());
     }
@@ -387,7 +400,7 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
 
         // if the item was not merged we need to create a new write
         // and enqueue it
-        if (true) {
+        if (!merged) {
             MemPacket* mem_pkt;
             if (is_dram) {
                 mem_pkt = dram->decodePacket(pkt, addr, size, false, true);
@@ -403,9 +416,6 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             
             // add meta dayta before add to queue
             assert(mem_pkt->pkt->req != nullptr);
-            mem_pkt->fromNetwork = mem_pkt->pkt->req->fromNetwork;
-            mem_pkt->cpuId = mem_pkt->pkt->req->cpuId;
-            mem_pkt->queueAddedTime = curTick();
             ///////////////////////////////////////////////////////////
             if (mem_pkt->fromNetwork){
                 stats.mempktNetwork++;
@@ -414,13 +424,7 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             }
 
             if (iterSched){
-                iterSched->push_to_queue(mem_pkt, 
-                                        &writeQueue, 
-                                        &readQueue,
-                                        false,
-                                        mem_pkt->qosValue(),
-                                        dram
-                );
+                iterSched->pushToQueues(mem_pkt, false);
             }else{
                 writeQueue[mem_pkt->qosValue()].push_back(mem_pkt);
             }
@@ -430,7 +434,7 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             logRequest(MemCtrl::WRITE, pkt->requestorId(), pkt->qosValue(),
                        mem_pkt->addr, 1);
 
-            //assert(totalWriteQueueSize == isInWriteQueue.size());
+            assert(totalWriteQueueSize == isInWriteQueue.size());
 
             // Update stats
             stats.avgWrQLen = totalWriteQueueSize;
@@ -456,7 +460,8 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
     accessAndRespond(pkt, frontendLatency);
     // If we are not already scheduled to get a request out of the
     // queue, do so now
-    if (!nextReqEvent.scheduled()) {
+    if (!nextReqEvent.scheduled() && 
+       (iterQSchedPolicy != enums::iterQSched::STAGE)){
         DPRINTF(MemCtrl, "Request scheduled immediately\n");
         schedule(nextReqEvent, curTick());
     }
@@ -551,9 +556,8 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
     unsigned int pkt_count = divCeil(offset + size, burst_size);
 
     // run the QoS scheduler and assign a QoS priority value to the packet
-    if (iterSched)
-        iterSched->qFillSel(&readQueue, &writeQueue, pkt, burst_size);
-    else
+    //notice that iterSched not need qos due to self handler
+    if (!iterSched)
         qosSchedule( { &readQueue, &writeQueue }, burst_size, pkt);
 
     // check local buffers and do not accept if full
@@ -987,11 +991,11 @@ MemCtrl::processNextReqEvent()
 {
     // transition is handled by QoS algorithm if enabled
     
-    // if (turnPolicy) {
-    //     // select bus state - only done if QoS algorithms are in use
-    //     busStateNext = selectNextBusState();
-    // }
-    iterSched->turnpolicy(busStateNext, &readQueue, &writeQueue);
+    if (turnPolicy) {
+        // select bus state - only done if QoS algorithms are in use
+        busStateNext = selectNextBusState();
+    }
+    //iterSched->turnpolicy(busStateNext, &readQueue, &writeQueue);
 
 
 
@@ -1095,6 +1099,8 @@ MemCtrl::processNextReqEvent()
             bool read_found = false;
             MemPacketQueue::iterator to_read;
             uint8_t prio = numPriorities();
+            MemPacket* mem_pkt;
+            
 
             if (!iterSched){
                 for (auto queue = readQueue.rbegin();
@@ -1120,34 +1126,11 @@ MemCtrl::processNextReqEvent()
                     }
                 }
             }else{
-                std::vector<MemPacketQueue*> interQHelper = iterSched->qSchedFill(&readQueue, &writeQueue, true);
-                for (auto mqIter  = interQHelper.rbegin();
-                          mqIter != interQHelper.rend()  ;
-                          mqIter++) 
-                {
                 
-
-                    DPRINTF(interQ, "Checking READ queue @ interselector\n");
-
-                    MemPacketQueue* preChoose = *mqIter;
-                    // Figure out which read request goes next
-                    // If we are changing command type, incorporate the minimum
-                    // bus turnaround delay which will be rank to rank delay
-                    DPRINTF(interQ, "start choose\n");
-                    to_read = chooseNext(*preChoose, switched_cmd_type ?
-                                                   minWriteToReadDataGap() : 0);
-                    DPRINTF(interQ, "stop choose\n");
-                    if (to_read != preChoose->end()) {
-                        // candidate read found
-                        read_found = true;
-                        break;
-                    }
-                }
-                DPRINTF(interQ, "finished READ queue @ interselector\n");
+                std::tie(mem_pkt, read_found) = iterSched->chooseToDram(true);
 
             }
 
-            iterSched->notifySelect(read_found ? *to_read : nullptr, true, &readQueue);
 
             // if no read to an available rank is found then return
             // at this point. There could be writes to the available ranks
@@ -1159,8 +1142,9 @@ MemCtrl::processNextReqEvent()
                 return;
             }
         
-
-            auto mem_pkt = *to_read;
+            if (!iterSched){
+                mem_pkt = *to_read;
+            }
 
             doBurstAccess(mem_pkt);
 
@@ -1171,10 +1155,15 @@ MemCtrl::processNextReqEvent()
             assert(mem_pkt->readyTime >= curTick());
 
             // log the response
-            logResponse(MemCtrl::READ, (*to_read)->requestorId(),
-                        mem_pkt->qosValue(), mem_pkt->getAddr(), 1,
-                        mem_pkt->readyTime - mem_pkt->entryTime);
-
+            if (!iterSched){
+                logResponse(MemCtrl::READ, (*to_read)->requestorId(),
+                            mem_pkt->qosValue(), mem_pkt->getAddr(), 1,
+                            mem_pkt->readyTime - mem_pkt->entryTime);
+            }else{
+                 logResponse(MemCtrl::READ, (mem_pkt)->requestorId(),
+                            mem_pkt->qosValue(), mem_pkt->getAddr(), 1,
+                            mem_pkt->readyTime - mem_pkt->entryTime);
+            }
 
             // Insert into response queue. It will be sent back to the
             // requestor at its readyTime
@@ -1198,7 +1187,8 @@ MemCtrl::processNextReqEvent()
 
             // remove the request from the queue
             // the iterator is no longer valid .
-            readQueue[mem_pkt->qosValue()].erase(to_read);
+            if (!iterSched)
+                readQueue[mem_pkt->qosValue()].erase(to_read);
         }
 
         // switching to writes, either because the read queue is empty
@@ -1213,6 +1203,7 @@ MemCtrl::processNextReqEvent()
         bool write_found = false;
         MemPacketQueue::iterator to_write;
         uint8_t prio = numPriorities();
+        MemPacket* mem_pkt;
 
         if (!iterSched){
         
@@ -1240,34 +1231,10 @@ MemCtrl::processNextReqEvent()
             }
 
         }else{
-                std::vector<MemPacketQueue*> interQHelper = iterSched->qSchedFill(&writeQueue, &readQueue, false);
-                for (auto mqIter  = interQHelper.rbegin();
-                          mqIter != interQHelper.rend()  ;
-                          mqIter++) 
-                {
-                
-
-                    DPRINTF(interQ, "Checking write queue @ interselector\n");
-
-                    MemPacketQueue* preChoose = *mqIter;
-                    // Figure out which read request goes next
-                    // If we are changing command type, incorporate the minimum
-                    // bus turnaround delay which will be rank to rank delay
-                    DPRINTF(interQ, "start choose\n");
-                    to_write = chooseNext(*preChoose, switched_cmd_type ?
-                                                   minWriteToReadDataGap() : 0);
-                    DPRINTF(interQ, "stop choose\n");
-                    if (to_write != preChoose->end()) {
-                        // candidate read found
-                        write_found = true;
-                        break;
-                    }
-                }
-                DPRINTF(interQ, "finished write_found queue @ interselector\n");
-
+                std::tie(mem_pkt, write_found) = iterSched->chooseToDram(false);
+               
         }
         
-        iterSched->notifySelect(write_found ? *to_write : nullptr, false, &writeQueue);
 
         // if there are no writes to a rank that is available to service
         // requests (i.e. rank is in refresh idle state) are found then
@@ -1279,7 +1246,9 @@ MemCtrl::processNextReqEvent()
             return;
         }
 
-        auto mem_pkt = *to_write;
+        if (!iterSched){
+            mem_pkt = *to_write;
+        }
 
         // sanity check
         assert(mem_pkt->size <= (mem_pkt->isDram() ?
@@ -1297,7 +1266,9 @@ MemCtrl::processNextReqEvent()
 
 
         // remove the request from the queue - the iterator is no longer valid
+        if (!iterSched){ // iterSched will delete automatically
         writeQueue[mem_pkt->qosValue()].erase(to_write);
+        }
 
         delete mem_pkt;
 
