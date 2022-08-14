@@ -59,5 +59,13 @@
         "valarray": "cpp",
         "variant": "cpp"
     },
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "editor.semanticTokenColorCustomizations": {
+        "rules": {
+            "*.deprecated": {
+                "foreground": "#808080",
+                "italic": true
+            }
+        }
+    }
 }

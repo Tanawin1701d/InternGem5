@@ -607,6 +607,9 @@ class MemCtrl : public qos::MemCtrl
         statistics::Vector pktNetWork;
         statistics::Vector pktCpus;
 
+        statistics::Scalar selectedHit;
+        statistics::Scalar selectedMiss;
+
     };
 
     CtrlStats stats;

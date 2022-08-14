@@ -190,6 +190,13 @@ struct StringWrap
     }                                            \
 } while (0)
 
+#define DPRINTF_SMS(x, ...) do {                     \
+    if (GEM5_UNLIKELY(TRACING_ON && ::gem5::debug::x)) {   \
+        ::gem5::Trace::getDebugLogger()->dprintf_flag(   \
+            ::gem5::curTick(), "SMS", #x, __VA_ARGS__); \
+    }                                            \
+} while (0)
+
 #define DPRINTFS(x, s, ...) do {                        \
     if (GEM5_UNLIKELY(TRACING_ON && ::gem5::debug::x)) {          \
         ::gem5::Trace::getDebugLogger()->dprintf_flag(          \

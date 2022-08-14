@@ -11,6 +11,7 @@
 #include "enums/iterQSched.hh"
 #include "debug/interQ.hh"
 #include "debug/ALGO_NETQ_Queue.hh"
+#include "debug/SMS.hh"
 #include <unordered_map>
 
 
@@ -63,9 +64,11 @@ namespace memory
             statistics::Scalar batchHit;
             statistics::Scalar amountPkt;
             statistics::Scalar serveByWriteQ;
+            statistics::Scalar batchExpire;
             statistics::Vector exploitBatch;
             statistics::Vector startNewBatch;
-            // statistics::Histogram maxSizeWriteQueue;
+            statistics::Histogram batchedSize;
+            //statistics::Histogram diffPushTime;
             // statistics::Histogram maxSizeReadQueue;
 
             
@@ -92,8 +95,9 @@ namespace memory
             struct BucketMeta{
                 
                 Tick FORMATION_THRED;
+                Tick lastAdded = 0;
                 stageMetaData* owner;
-                std::unordered_map<QUEUEID, BatchMeta> batchMap;
+                std::unordered_map<BATCHID, BatchMeta> batchMap;
                 MemPacketQueue dayta;
                 uint64_t curSize = 0;
                 uint64_t maxSize = 0;
@@ -144,7 +148,10 @@ namespace memory
             bool stage3full(uint8_t bankNum, uint64_t  reqEntry = 1);
             std::pair<MemPacket*, bool>
             chooseToDram();
+            //debuger
+            void printStage(std::vector<MemPacketQueue>& stageRef);
 
+            void printStage(std::vector<BucketMeta>& stageRef);
             //constructor
             stageMetaData( STAGE_SCHED_Queue& own,
                             uint32_t  tt_lotto,

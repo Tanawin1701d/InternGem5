@@ -1139,8 +1139,11 @@ MemCtrl::processNextReqEvent()
             // for a refresh event to kick things into action again.
             if (!read_found) {
                 DPRINTF(MemCtrl, "No Reads Found - exiting\n");
+                stats.selectedMiss++;
                 return;
             }
+
+            stats.selectedHit++;
         
             if (!iterSched){
                 mem_pkt = *to_read;
@@ -1442,7 +1445,9 @@ MemCtrl::CtrlStats::CtrlStats(MemCtrl &_ctrl)
     ADD_STAT(mempktCpu,statistics::units::Count::get(), "amount of packet that come from cpu which split to mempkt"),
     
     ADD_STAT(pktNetWork,statistics::units::Count::get(),"amount packet come from cpu"),
-    ADD_STAT(pktCpus,statistics::units::Count::get(),"amount packet come from network")
+    ADD_STAT(pktCpus,statistics::units::Count::get(),"amount packet come from network"),
+    ADD_STAT(selectedHit, statistics::units::Count::get(), "selected to dram hit"),
+    ADD_STAT(selectedMiss, statistics::units::Count::get(), "selected to dram miss")
            
 {
 }

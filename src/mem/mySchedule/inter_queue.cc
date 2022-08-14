@@ -127,7 +127,7 @@ STAGE_SCHED_Queue::stageMetaData::processStage2Event(){
                         selBucket    = nextBucket;
                         lastRRBucket = nextBucket;
                 }else if ( pickalgo == STAGE2_PICK::sjf ){
-                        QUEUEID nextBucket;
+                        QUEUEID nextBucket = 0;
                         uint64_t nextSize = UINT64_MAX;
                         owner.algo_stats.selectedBySJF++;
                         for (QUEUEID iterBucket = 0; iterBucket < stage1AMTBUCKET; iterBucket++){
@@ -150,9 +150,19 @@ STAGE_SCHED_Queue::stageMetaData::processStage2Event(){
                         panic("un recognize stage2 pick policy");
                 }
 
-                
-
-                stage2CurState = stage1Meta[selBucket].canPop() ? STAGE2_STATE::drain : STAGE2_STATE::pick;
+                if (stage1Meta[selBucket].canPop()){
+                        stage2CurState =  STAGE2_STATE::drain;
+                        DPRINTF_SMS(SMS, "---------------------------------------------------\n");
+                        DPRINTF_SMS(SMS, "////////////////////////picking up\n");
+                        DPRINTF_SMS(SMS, "stage1 section\n");
+                        printStage(stage1Meta);
+                        DPRINTF_SMS(SMS, "stage3 section\n");
+                        printStage(stage3Data);
+                        BATCHID preLogBid = stage1Meta[selBucket].front()->batchId;
+                        owner.algo_stats.batchedSize.sample(stage1Meta[selBucket].batchMap[preLogBid].batchSize);
+                }else{
+                        stage2CurState =  STAGE2_STATE::pick;
+                }
 
         }
         
@@ -168,12 +178,20 @@ STAGE_SCHED_Queue::stageMetaData::processStage2Event(){
                         //update status
                         stage1PktCount--;
                         stage3PktCount++;
-                        stage2CurState = 
-                                (       (!stage1Meta[selBucket].empty()) && 
-                                        (mpkt->batchId == stage1Meta[selBucket].front()->batchId)
-                                ) 
-                                ? STAGE2_STATE::drain 
-                                : STAGE2_STATE::pick; 
+
+                        if ( !stage1Meta[selBucket].empty() && (mpkt->batchId == stage1Meta[selBucket].front()->batchId) ){
+                                stage2CurState = STAGE2_STATE::drain;
+                        }else{
+                                stage2CurState = STAGE2_STATE::pick;
+
+                                DPRINTF_SMS(SMS, "//////////////////finishDrainSection\n");
+                                DPRINTF_SMS(SMS, "stage1 section\n");
+                                printStage(stage1Meta);
+                                DPRINTF_SMS(SMS, "stage3 section\n");
+                                printStage(stage3Data);
+                                DPRINTF_SMS(SMS, "------------------------------------------------\n");
+                        }
+                        
 
                         if ( !(owner.mctrl)->requestEventScheduled() ){
                                 owner.mctrl->restartScheduler(curTick());
@@ -214,6 +232,7 @@ STAGE_SCHED_Queue::stageMetaData::chooseToDram(){
                                 stage3Data[nextBucket].pop_front();
                                 stage3PktCount--;
                                 stageGSize[mempkt->cpuId]--;
+                                //selBank = nextBucket;
                                 assert(stageGSize[mempkt->cpuId] >= 0);
                                 assert(stage3PktCount >= 0);
                                 //stat
@@ -228,6 +247,54 @@ STAGE_SCHED_Queue::stageMetaData::chooseToDram(){
         owner.algo_stats.batchMiss++;
         return {nullptr, false};
 
+}
+
+void
+STAGE_SCHED_Queue::stageMetaData::printStage(std::vector<MemPacketQueue>& stageRef){
+        DPRINTF_SMS(SMS,"--------------\n");
+        for (int i = 0; i < stageRef.size(); i++){
+                int count = 0;
+                std::string pre_print = "";
+                for (int j = 0; j < stageRef[i].size(); j++){
+                        count++;
+                        if ( ( (j+1) < stageRef[i].size() ) &&  
+                             (stageRef[i].at(j+1)->batchId == stageRef[i].at(j)->batchId) )
+                        {
+                                //pass
+                        }else{
+                                //DPRINTF_SMS(SMS,"bid:%d:%d", stageRef[i].at(j)->batchId,count);
+                                pre_print += "bid: " + std::to_string(stageRef[i].at(j)->batchId) + 
+                                             " c: " + std::to_string(count) + " ";
+                                count = 0;
+                        }
+                }
+        DPRINTF_SMS(SMS,"q:%d  --->%s\n", i, pre_print);
+        }
+}
+
+
+void
+STAGE_SCHED_Queue::stageMetaData::printStage(std::vector<BucketMeta>& stageRef){
+        DPRINTF_SMS(SMS,"--------------\n");
+        for (int i = 0; i < stageRef.size(); i++){
+                int count = 0;
+                std::string pre_print = "";
+                for (int j = 0; j < stageRef[i].dayta.size(); j++){
+                        count++;
+                        if ( ( (j+1) < stageRef[i].dayta.size() ) &&  
+                             (stageRef[i].dayta.at(j+1)->batchId == stageRef[i].dayta.at(j)->batchId) )
+                        {
+                                //pass
+                        }else{
+                                //DPRINTF_SMS(SMS,"bid:%d:%d", stageRef[i].dayta.at(j)->batchId,count);
+                                pre_print += "bid: " + std::to_string(stageRef[i].dayta.at(j)->batchId) + 
+                                             " c: " + std::to_string(count) + " ";
+                                count = 0;
+                        }
+        
+                }
+                DPRINTF_SMS(SMS,"q:%d  --->%s\n", i, pre_print);
+        }
 }
 
 //constructor
@@ -346,6 +413,8 @@ STAGE_SCHED_Queue::stageMetaData::BucketMeta::canPop(){
 void
 STAGE_SCHED_Queue::stageMetaData::BucketMeta::push(MemPacket* mpkt){
         assert( !( (lastBatchId == -1) ^ (curSize == 0) ));
+        //owner->owner.algo_stats.diffPushTime.sample(mpkt->queueAddedTime - lastAdded);
+        lastAdded = mpkt->queueAddedTime;
         updateBatchStatus();
         if (lastBatchId != -1){
                 if (batchMap[lastBatchId].isBatchReady ||
@@ -424,6 +493,7 @@ STAGE_SCHED_Queue::stageMetaData::BucketMeta::updateBatchStatus(){
         }else{
                 assert(lastBatchId >= 0);
                 if ( (curTick() - batchMap[lastBatchId].firstAddedTime) >= FORMATION_THRED){
+                        owner->owner.algo_stats.batchExpire++;
                         batchMap[lastBatchId].isBatchReady = true;
                 }
         }
@@ -447,7 +517,6 @@ STAGE_SCHED_Queue::stageMetaData::BucketMeta::clear(){
 STAGE_SCHED_Queue::STAGE_SCHED_Queue(const STAGE_SCHED_QueueParams &p):
 
 InterQueue(p),
-algo_stats(*this),
 readSide( *this, 
           p.tt_lotto,
           p.sjf_lotto,
@@ -468,7 +537,8 @@ writeSide( *this,
           p.stage3_sizePerBank, 
           p.stage3_amtBank
 ),
-amtSrc(p.stage1_amtSrc)
+amtSrc(p.stage1_amtSrc),
+algo_stats(*this)
 {
         
 }
@@ -504,7 +574,16 @@ ADD_STAT(startNewBatch,
          "amount of packet that must assign new batch number"),
  ADD_STAT(serveByWriteQ,
          statistics::units::Count::get(),
-         "amount of memory packet that is serve by write queue")
+         "amount of memory packet that is serve by write queue"),
+ADD_STAT(batchExpire,
+         statistics::units::Count::get(),
+         "expire batch"),
+ADD_STAT(batchedSize,
+        statistics::units::Count::get(),
+        "batch size in stage1 before picked to stage3")//,
+// ADD_STAT(diffPushTime,
+//         statistics::units::Count::get(),
+//         "differrent time between 2 packet arrive")
 //,
 // ADD_STAT(
 //         maxSizeWriteQueue,
@@ -515,6 +594,15 @@ ADD_STAT(startNewBatch,
 //         statistics::units::Count::get(),
 //         "max size of mempacket that fill in each read queue")
 {
+        using namespace statistics;
+
+        batchedSize
+        .init(1024)
+        .flags(nozero);
+        //diffPushTime
+        //.init(1);
+        // TODO for now we deactivate it
+        
 }
 
 void 

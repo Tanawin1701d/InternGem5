@@ -235,11 +235,15 @@ def config_mem(options, system):
                 elif(opt_mem_sched_iter == "STAGE_SCHED_Queue"):
                     mem_ctrl.iterSched        = ObjectList.ObjectList(getattr(m5.objects, 'InterQueue', None)).get(opt_mem_sched_iter)()
                     mem_ctrl.iterSched.stage1_amtSrc = options.num_cpus
-                    mem_ctrl.iterSched.stage3_sizePerBank = 1024
-                    mem_ctrl.iterSched.stage1_sizePerSrc = 1024
-                    mem_ctrl.iterSched.stage1_FORMATION_THRED = "50ns"
-                    mem_ctrl.iterQSizePerRW      = options.num_cpus
-                    mem_ctrl.qos_priorities      = options.num_cpus
+                    mem_ctrl.iterSched.stage3_sizePerBank = 256
+                    mem_ctrl.iterSched.stage1_sizePerSrc  = 256
+                    mem_ctrl.iterSched.stage1_FORMATION_THRED = "40ns"
+                    mem_ctrl.iterSched.sjf_lotto = "50"
+                    mem_ctrl.iterSched.stage2_TFDELAY = "0.25ns"
+                    mem_ctrl.iterQSizePerRW         = options.num_cpus
+                    mem_ctrl.qos_priorities         = options.num_cpus
+                    mem_ctrl.dram.read_buffer_size  = options.num_cpus * (mem_ctrl.iterSched.stage1_sizePerSrc + mem_ctrl.iterSched.stage3_sizePerBank)
+                    mem_ctrl.dram.write_buffer_size = mem_ctrl.iterSched.stage1_sizePerSrc
                     
                 mem_ctrls.append(mem_ctrl)
 
