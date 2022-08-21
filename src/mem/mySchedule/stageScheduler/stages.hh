@@ -22,7 +22,7 @@ class   Stages : public SimObject{
             public:
             enum STAGE2_STATE  {pick, drain};
             enum STAGE2_PICK   {rr  , sjf  };
-            STAGE_MEM_SCHED*             owner;
+            InterStage*                  owner;
             //stageG
             std::vector<uint64_t>        stageGSize; // use to track sjf
             //stage1
