@@ -1,12 +1,7 @@
 Import('*')
 
 SimObject('myScheduler.py', sim_objects=['myScheduler'])
-SimObject('InterQueue.py', sim_objects=['InterQueue'
-                                        # 'SimpleQueue',
-                                        # 'ALGO_WF_Queue',
-                                        # 'ALGO_NETQ_Queue',
-                                        ,'STAGE_SCHED_Queue'
-                                        ]) #, enums=['iterQSched'])
+SimObject('InterQueue.py', sim_objects=['InterQueue'])
 
 
 Source('my_scheduler.cc')
@@ -17,4 +12,3 @@ DebugFlag('scheduler')
 DebugFlag('passingTest')
 DebugFlag('interQ')
 DebugFlag('ALGO_NETQ_Queue')
-DebugFlag('SMS')

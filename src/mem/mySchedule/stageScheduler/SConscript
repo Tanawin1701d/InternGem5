@@ -1,0 +1,15 @@
+from python.m5.SimObject import SimObject
+
+
+Import('*')
+
+SimObject('Stages.py'    , sim_objects = ['Stages', "WriteStages"])
+SimObject('InterStage.py', sim_objects = ['InterStage'])
+
+Source('inter_stage.cc')
+Source('stages.cc')
+Source('bucket.cc')
+
+
+
+DebugFlag('SMS')
