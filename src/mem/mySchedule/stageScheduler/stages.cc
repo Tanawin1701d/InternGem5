@@ -21,7 +21,7 @@ Stages::pushToQueues(MemPacket* mpkt){
                 QUEUEID bucketId = mpkt->cpuId;
                 stageGSize[bucketId]++;
                 stage1PktCount++;
-                stage1Meta[bucketId].push(mpkt);
+                stage1Data[bucketId].push(mpkt);
                 //schedule stage2 if it needed
                 if (!nextStage2Event.scheduled()){
                         schedule(nextStage2Event);
@@ -107,7 +107,7 @@ Stages::processStage2Event(){
                         stage1PktCount--;
                         stage3PktCount++;
 
-                        if ( !stage1Data[selBucket].empty() && (mpkt->batchId == stage1Meta[selBucket].front()->batchId) ){
+                        if ( !stage1Data[selBucket].empty() && (mpkt->batchId == stage1Data[selBucket].front()->batchId) ){
                                 stage2CurState = STAGE2_STATE::drain;
                         }else{
                                 stage2CurState = STAGE2_STATE::pick;
@@ -170,7 +170,7 @@ Stages::chooseToDram(){
         }
         while(nextBucket != selBank);
 
-        owner.algo_stats.batchMiss++;
+        //owner.algo_stats.batchMiss++;
         return {nullptr, false};
 
 }

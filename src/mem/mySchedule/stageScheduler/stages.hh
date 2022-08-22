@@ -6,6 +6,7 @@
 #include "params/WriteStages.hh"
 #include "sim/sim_object.hh"
 #include "base/types.hh"
+#include "debug/SMS.hh"
 
 
 

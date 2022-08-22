@@ -320,9 +320,9 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
 
             DPRINTF(MemCtrl, "Adding to read queue\n");
             // add meta data before added to read queue
-            mem_pkt->fromNetwork = mem_pkt->pkt->req->fromNetwork;
-            mem_pkt->cpuId = mem_pkt->pkt->req->cpuId;
-            mem_pkt->queueAddedTime = curTick();
+            // mem_pkt->fromNetwork = mem_pkt->pkt->req->fromNetwork;
+            // mem_pkt->cpuId = mem_pkt->pkt->req->cpuId;
+            // mem_pkt->queueAddedTime = curTick();
 
             if (mem_pkt->fromNetwork){
                 stats.mempktNetwork++;
