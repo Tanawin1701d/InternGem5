@@ -1,9 +1,9 @@
 import this
 from m5.params import *
 #from m5.SimObject import SimObject
-from m5.InterQueue      import *
-from m5.Stages          import *
-from m5.WriteStages     import *
+from m5.objects.InterQueue      import *
+from m5.objects.Stages          import *
+from m5.objects.WriteStages     import *
 
 
 class InterStage(InterQueue):
@@ -15,9 +15,9 @@ class InterStage(InterQueue):
      readStages        = Param.Stages     (NULL, "read stage")
      writeStages       = Param.WriteStages(NULL, "write stage")
 
-     def initStage(self):
+     def initStage(self, num_src):
           self.readStages  = Stages()
           self.writeStages = WriteStages()
-          
+          self.amt_src     = num_src
           self.readStages .init(self.amt_src, self)
           self.writeStages.init(self.amt_src, self)
