@@ -1,9 +1,8 @@
-import this
 from m5.params import *
 #from m5.SimObject import SimObject
 from m5.objects.InterQueue      import *
 from m5.objects.Stages          import *
-from m5.objects.WriteStages     import *
+#from m5.objects.WriteStages     import *
 
 
 class InterStage(InterQueue):

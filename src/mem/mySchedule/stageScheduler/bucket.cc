@@ -38,15 +38,9 @@ Bucket::push(MemPacket* mpkt){
                         BATCHID newBid = (curSize) ? batchOrder.back()+1 : 0;
                         batchOrder.push_back(newBid);
                         mpkt->batchId = newBid;
-                        batchMap.insert(
-                                         {newBid,
-                                           {
-                                                 curTick(),
-                                                 false,
-                                                 MemPacketQueue ({mpkt})
-                                           }
-                                         }
-                                       );
+                        Batch newStartBatch;
+                        newStartBatch.dayta.push_back(mpkt);
+                        batchMap.insert({newBid, newStartBatch});
                 }else{
                         // we exploit batch
                         assert(!batchOrder.empty());

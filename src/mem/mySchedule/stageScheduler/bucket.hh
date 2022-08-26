@@ -16,7 +16,7 @@ namespace gem5::memory{
     class MemPacket;
 
     typedef uint64_t BATCHID;
-
+      typedef std::deque<MemPacket*> MemPacketQueue;
     struct Batch{
                     Tick                    firstAddedTime = 0;
                     bool                    isBatchReady   = false;

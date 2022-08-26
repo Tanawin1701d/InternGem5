@@ -10,7 +10,9 @@
 
 
 
-namespace gem5::memory{
+namespace gem5{
+    
+namespace memory{
 
 
 //predeclaration
@@ -60,7 +62,7 @@ class   Stages : public SimObject{
             [[maybe_unused]]void        printStage(std::vector<MemPacketQueue>& stageRef);
             [[maybe_unused]]void        printStage(std::vector<BucketMeta>& stageRef);
             //constructor
-                                        Stages( StagesParams& p );
+            Stages( const StagesParams& p );
             
         };
         
@@ -68,9 +70,10 @@ class   Stages : public SimObject{
             public:
             bool                        serveByWriteQueue(Addr addr, unsigned size);
             bool                        serveByWriteQueue(Addr addr, unsigned size, MemPacketQueue& srcToFind);
-                                        writeStages( WriteStagesParams& p);
+                                        writeStages( const WriteStagesParams& p);
         };
 
+    }
 }
 
 #endif // __MEM_STAGESCHED_STAGE__HH__

@@ -1,6 +1,6 @@
 from m5.params               import *
 from m5.SimObject            import SimObject
-from m5.objects.InterStages  import *
+from m5.objects.InterStage   import *
 
 
 class Stages(SimObject):
@@ -23,9 +23,9 @@ class Stages(SimObject):
     st3_amt_bank          = Param.UInt8 (8, "amount of bank")
 
 
-    def init(self,nc, ow):
-        self.st1_amt_src = nc
-        self.owner       = ow
+    # def init(self,nc, ow):
+    #     self.st1_amt_src = nc
+    #     self.owner       = ow
 
 
 class WriteStages(Stages):

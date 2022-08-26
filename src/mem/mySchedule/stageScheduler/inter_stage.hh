@@ -72,7 +72,7 @@ class InterStage : public InterQueue{
         //notifySel(bool read, MemPacket* mpkt) override;
         //////////////////
         public:
-            STAGE_SCHED_Queue(const InterStageParams &p);
+            InterStage(const InterStageParams &p);
 
     };
 

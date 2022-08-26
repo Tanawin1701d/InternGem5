@@ -225,7 +225,7 @@ Stages::printStage(std::vector<Bucket>& stageRef){
 
 //constructor
 Stages::Stages(
-        StagesParams& p
+        const StagesParams& p
               ):
 //stage1
 stage1AMTBUCKET(p.st1_amt_src),
@@ -298,7 +298,7 @@ WriteStages::serveByWriteQueue(Addr addr, unsigned size){
         return false;
 }
 
-WriteStages::WriteStages( WriteStagesParams& p):
+WriteStages::WriteStages( const WriteStagesParams& p):
 
 Stages(p)
 {}
