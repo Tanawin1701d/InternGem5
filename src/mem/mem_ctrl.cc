@@ -315,7 +315,7 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             }
             mem_pkt->burstHelper = burst_helper;
 
-            assert(!readQueueFull(1));
+            if (!iterSched) assert(!readQueueFull(1));
             stats.rdQLenPdf[totalReadQueueSize + respQueue.size()]++;
 
             DPRINTF(MemCtrl, "Adding to read queue\n");
@@ -334,11 +334,11 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
                 iterSched->pushToQueues(mem_pkt, true);
             }else{
                 readQueue[mem_pkt->qosValue()].push_back(mem_pkt);
+                logRequest(MemCtrl::READ, pkt->requestorId(), pkt->qosValue(),
+                mem_pkt->addr, 1);
             }
             ///////////////////////////////////////////////////////////
             // log packet
-            logRequest(MemCtrl::READ, pkt->requestorId(), pkt->qosValue(),
-                       mem_pkt->addr, 1);
 
             // Update stats
             stats.avgRdQLen = totalReadQueueSize + respQueue.size();
@@ -363,9 +363,7 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
     // queue, do so now
 
 
-    if ( (!nextReqEvent.scheduled() ) && 
-         (iterQSchedPolicy != enums::iterQSched::STAGE)  
-       ) {
+    if ( (!nextReqEvent.scheduled() ) && (!iterSched) ) { // interSched will handle themselve
         DPRINTF(MemCtrl, "Request scheduled immediately\n");
         schedule(nextReqEvent, curTick());
     }
@@ -383,9 +381,9 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
     // if the request size is larger than burst size, the pkt is split into
     // multiple packets
     const Addr base_addr = pkt->getAddr();
-    Addr addr = base_addr;
-    uint32_t burst_size = is_dram ? dram->bytesPerBurst() :
-                                    nvm->bytesPerBurst();
+          Addr addr = base_addr;
+          uint32_t burst_size = is_dram ? dram->bytesPerBurst() :
+                                          nvm->bytesPerBurst();
     for (int cnt = 0; cnt < pkt_count; ++cnt) {
         unsigned size = std::min((addr | (burst_size - 1)) + 1,
                         base_addr + pkt->getSize()) - addr;
@@ -427,14 +425,12 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
                 iterSched->pushToQueues(mem_pkt, false);
             }else{
                 writeQueue[mem_pkt->qosValue()].push_back(mem_pkt);
+                // log packet
+                logRequest(MemCtrl::WRITE, pkt->requestorId(), pkt->qosValue(),
+                           mem_pkt->addr, 1);
+                assert(totalWriteQueueSize == isInWriteQueue.size());
             }
             isInWriteQueue.insert(burstAlign(addr, is_dram));
-
-            // log packet
-            logRequest(MemCtrl::WRITE, pkt->requestorId(), pkt->qosValue(),
-                       mem_pkt->addr, 1);
-
-            assert(totalWriteQueueSize == isInWriteQueue.size());
 
             // Update stats
             stats.avgWrQLen = totalWriteQueueSize;
@@ -461,7 +457,7 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
     // If we are not already scheduled to get a request out of the
     // queue, do so now
     if (!nextReqEvent.scheduled() && 
-       (iterQSchedPolicy != enums::iterQSched::STAGE)){
+       (!iterSched)){
         DPRINTF(MemCtrl, "Request scheduled immediately\n");
         schedule(nextReqEvent, curTick());
     }
@@ -544,7 +540,7 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
               pkt->print());
     }
 
-
+    panic_if(retryWrReq && (stCpuid != retryCpuId), "may be interconnect not provide old packet");
     // Find out how many memory packets a pkt translates to
     // If the burst size is equal or larger than the pkt size, then a pkt
     // translates to only one memory packet. Otherwise, a pkt translates to
@@ -567,6 +563,7 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
             DPRINTF(MemCtrl, "Write queue full, not accepting\n");
             // remember that we have to retry this port
             retryWrReq = true;
+            retryCpuId = stCpuid;
             stats.numWrRetry++;
             return false;
         } else {
@@ -633,7 +630,7 @@ MemCtrl::processRespondEvent()
     } else {
         // if there is nothing left in any queue, signal a drain
         if (drainState() == DrainState::Draining &&
-            !totalWriteQueueSize && !totalReadQueueSize &&
+            ( (!iterSched && !totalWriteQueueSize && !totalReadQueueSize)  ||  (iterSched &&  iterSched->isWriteEmpty() && iterSched->isReadEmpty())  )  &&
             allIntfDrained()) {
 
             DPRINTF(Drain, "Controller done draining\n");
@@ -993,9 +990,8 @@ MemCtrl::processNextReqEvent()
     
     if (turnPolicy) {
         // select bus state - only done if QoS algorithms are in use
-        busStateNext = selectNextBusState();
+        busStateNext = iterSched ? iterSched->turnpolicy(busState) : selectNextBusState();
     }
-    //iterSched->turnpolicy(busStateNext, &readQueue, &writeQueue);
 
 
 
@@ -1048,6 +1044,7 @@ MemCtrl::processNextReqEvent()
     bool nvm_busy = true;
     bool all_writes_nvm = false;
     if (nvm) {
+        //TODO make nvm also posible use
         all_writes_nvm = nvm->numWritesQueued == totalWriteQueueSize;
         bool read_queue_empty = totalReadQueueSize == 0;
         nvm_busy = nvm->isBusy(read_queue_empty, all_writes_nvm);
@@ -1067,32 +1064,59 @@ MemCtrl::processNextReqEvent()
         // track if we should switch or not
         bool switch_to_writes = false;
 
-        if (totalReadQueueSize == 0) {
+        if ( ((!iterSched)&&(totalReadQueueSize == 0)) || (iterSched && iterSched->isReadEmpty()) ) {
             // In the case there is no read request to go next,
             // trigger writes if we have passed the low threshold (or
             // if we are draining)
-            if (!(totalWriteQueueSize == 0) &&
-                (drainState() == DrainState::Draining ||
-                 totalWriteQueueSize > writeLowThreshold)) {
 
-                DPRINTF(MemCtrl,
-                        "Switching to writes due to read queue empty\n");
-                switch_to_writes = true;
-            } else {
-                // check if we are drained
-                // not done draining until in PWR_IDLE state
-                // ensuring all banks are closed and
-                // have exited low power states
-                if (drainState() == DrainState::Draining &&
-                    respQueue.empty() && allIntfDrained()) {
+            if (iterSched){
 
-                    DPRINTF(Drain, "MemCtrl controller done draining\n");
-                    signalDrainDone();
+                if( (!iterSched->isWriteEmpty()) && ( (drainState() == DrainState::Draining) || iterSched->writeExceed()  ) ){
+                    // case we must switch from read to write dueto exceed of write thredshold or simulator intend to draining
+                    DPRINTF(MemCtrl,"Switching to writes due to read queue empty\n");
+                    switch_to_writes = true;
+                }else{
+                    // case write is empty or ( not drain state and not exceed thredshold )
+
+                    // check if we are drained
+                    // not done draining until in PWR_IDLE state
+                    // ensuring all banks are closed and
+                    // have exited low power states
+                    if (drainState() == DrainState::Draining &&
+                        respQueue.empty() && allIntfDrained()) {
+
+                        DPRINTF(Drain, "MemCtrl controller done draining\n");
+                        signalDrainDone();
+                    }
+
+                    // nothing to do, not even any point in scheduling an
+                    // event for the next request
+                    return;
                 }
+            }else{
+                if (!(totalWriteQueueSize == 0) &&
+                    (drainState() == DrainState::Draining ||
+                     totalWriteQueueSize > writeLowThreshold)) {
 
-                // nothing to do, not even any point in scheduling an
-                // event for the next request
-                return;
+                    DPRINTF(MemCtrl,
+                            "Switching to writes due to read queue empty\n");
+                    switch_to_writes = true;
+                } else {
+                    // check if we are drained
+                    // not done draining until in PWR_IDLE state
+                    // ensuring all banks are closed and
+                    // have exited low power states
+                    if (drainState() == DrainState::Draining &&
+                        respQueue.empty() && allIntfDrained()) {
+
+                        DPRINTF(Drain, "MemCtrl controller done draining\n");
+                        signalDrainDone();
+                    }
+
+                    // nothing to do, not even any point in scheduling an
+                    // event for the next request
+                    return;
+                }
             }
         } else {
 
@@ -1163,9 +1187,9 @@ MemCtrl::processNextReqEvent()
                             mem_pkt->qosValue(), mem_pkt->getAddr(), 1,
                             mem_pkt->readyTime - mem_pkt->entryTime);
             }else{
-                 logResponse(MemCtrl::READ, (mem_pkt)->requestorId(),
-                            mem_pkt->qosValue(), mem_pkt->getAddr(), 1,
-                            mem_pkt->readyTime - mem_pkt->entryTime);
+                //  logResponse(MemCtrl::READ, (mem_pkt)->requestorId(),
+                //             mem_pkt->qosValue(), mem_pkt->getAddr(), 1,
+                //             mem_pkt->readyTime - mem_pkt->entryTime);
             }
 
             // Insert into response queue. It will be sent back to the
@@ -1180,18 +1204,25 @@ MemCtrl::processNextReqEvent()
 
             respQueue.push_back(mem_pkt);
 
-            // we have so many writes that we have to transition
-            // don't transition if the writeRespQueue is full and
-            // there are no other writes that can issue
-            if ((totalWriteQueueSize > writeHighThreshold) &&
-               !(nvm && all_writes_nvm && nvm->writeRespQueueFull())) {
-                switch_to_writes = true;
-            }
 
-            // remove the request from the queue
-            // the iterator is no longer valid .
-            if (!iterSched)
+            if (!iterSched){
+                // we have so many writes that we have to transition
+                // don't transition if the writeRespQueue is full and
+                // there are no other writes that can issue
+                if ((totalWriteQueueSize > writeHighThreshold) &&
+                   !(nvm && all_writes_nvm && nvm->writeRespQueueFull())) {
+                    switch_to_writes = true;
+                }
+
+                // remove the request from the queue
+                // the iterator is no longer valid .
                 readQueue[mem_pkt->qosValue()].erase(to_read);
+            }else{
+                if ( iterSched->writeStageExceed() &&
+                   !(nvm && all_writes_nvm && nvm->writeRespQueueFull())) {
+                    switch_to_writes = true;
+                }
+            }
         }
 
         // switching to writes, either because the read queue is empty
@@ -1201,6 +1232,7 @@ MemCtrl::processNextReqEvent()
             // transition to writing
             busStateNext = WRITE;
         }
+
     } else {
 
         bool write_found = false;
@@ -1270,7 +1302,7 @@ MemCtrl::processNextReqEvent()
 
         // remove the request from the queue - the iterator is no longer valid
         if (!iterSched){ // iterSched will delete automatically
-        writeQueue[mem_pkt->qosValue()].erase(to_write);
+            writeQueue[mem_pkt->qosValue()].erase(to_write);
         }
 
         delete mem_pkt;
@@ -1287,8 +1319,8 @@ MemCtrl::processNextReqEvent()
         if (totalWriteQueueSize == 0 ||
             (below_threshold && drainState() != DrainState::Draining) ||
             (totalReadQueueSize && writesThisTime >= minWritesPerSwitch) ||
-            (totalReadQueueSize && nvm && nvm->writeRespQueueFull() &&
-             all_writes_nvm)) {
+            (totalReadQueueSize && nvm && nvm->writeRespQueueFull() && all_writes_nvm)) 
+            {
 
             // turn the bus back around for reads again
             busStateNext = MemCtrl::READ;
@@ -1308,9 +1340,18 @@ MemCtrl::processNextReqEvent()
     // them retry. This is done here to ensure that the retry does not
     // cause a nextReqEvent to be scheduled before we do so as part of
     // the next request processing
-    if (retryWrReq && totalWriteQueueSize < writeBufferSize) {
-        retryWrReq = false;
-        port.sendRetryReq();
+    if (!iterSched){
+        if (retryWrReq && totalWriteQueueSize < writeBufferSize) {
+            retryWrReq = false;
+            port.sendRetryReq();
+        }
+    }else{
+        // for sms may be block due to conflict miss
+        if (retryWrReq && (!iterSched->writeQueueFull(1, retryCpuId))){
+            retryCpuId = 0;
+            retryWrReq = false;
+            port.sendRetryReq();
+        }
     }
 }
 

@@ -40,6 +40,16 @@ namespace memory
         chooseToDram(bool is_read) = 0;
         virtual bool 
         serveByWriteQueue(Addr addr, unsigned size) = 0;
+        //select next bus state // due to main controller must handle draining state we must set default to read
+        virtual qos::MemCtrl::BusState 
+        turnpolicy(qos::MemCtrl::BusState current_state) = 0;
+        virtual bool
+        isWriteEmpty() = 0;
+        virtual bool
+        isReadEmpty() = 0;
+        virtual bool
+        writeStageExceed() = 0;
+
 
         InterQueue(const InterQueueParams &p);
 

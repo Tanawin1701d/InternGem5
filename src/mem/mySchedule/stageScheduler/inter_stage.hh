@@ -3,7 +3,7 @@
 
 #include "params/InterStage.hh"
 #include "mem/mySchedule/inter_queue.hh"
-#include "mem/mySchedule/stageScheduler/stages.hh"
+
 
 namespace gem5{
 
@@ -67,9 +67,16 @@ class InterStage : public InterQueue{
         chooseToDram(bool is_read) override;
 
         bool
-        serveByWriteQueue(Addr addr, unsigned size);
-        //void
-        //notifySel(bool read, MemPacket* mpkt) override;
+        serveByWriteQueue(Addr addr, unsigned size) override;
+
+        qos::MemCtrl::BusState 
+        turnpolicy(qos::MemCtrl::BusState current_state) override;
+        bool
+        isWriteEmpty() override;
+        bool
+        isReadEmpty() override;
+        bool
+        writeStageExceed() override;
         //////////////////
         public:
             InterStage(const InterStageParams &p);

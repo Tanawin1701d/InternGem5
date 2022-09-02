@@ -5,7 +5,7 @@
 #include "params/Stages.hh"
 #include "params/WriteStages.hh"
 #include "sim/sim_object.hh"
-#include "base/types.hh"
+//#include "base/types.hh"
 #include "debug/SMS.hh"
 
 
@@ -48,6 +48,8 @@ class   Stages : public SimObject{
             std::vector<uint64_t>        stage3Size;
             std::vector<MemPacketQueue>  stage3Data;
 
+            //stageG // global state
+            bool                        empty();
             //stage1
             bool                        canPush(QUEUEID qid, uint64_t neededEntry);
             void                        pushToQueues(MemPacket* mpkt);
@@ -60,17 +62,10 @@ class   Stages : public SimObject{
             std::pair<MemPacket*, bool> chooseToDram();
             //debuger
             [[maybe_unused]]void        printStage(std::vector<MemPacketQueue>& stageRef);
-            [[maybe_unused]]void        printStage(std::vector<BucketMeta>& stageRef);
+            [[maybe_unused]]void        printStage(std::vector<Bucket>& stageRef);
             //constructor
             Stages( const StagesParams& p );
             
-        };
-        
-        class WriteStages : public Stages{
-            public:
-            bool                        serveByWriteQueue(Addr addr, unsigned size);
-            bool                        serveByWriteQueue(Addr addr, unsigned size, MemPacketQueue& srcToFind);
-                                        writeStages( const WriteStagesParams& p);
         };
 
     }

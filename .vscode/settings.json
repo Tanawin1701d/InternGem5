@@ -73,7 +73,8 @@
         "random": "cpp",
         "regex": "cpp",
         "shared_mutex": "cpp",
-        "cfenv": "cpp"
+        "cfenv": "cpp",
+        "ciso646": "cpp"
     },
     "cmake.configureOnOpen": false,
     "editor.semanticTokenColorCustomizations": {

@@ -1,9 +1,17 @@
 #include "stages.hh"
 #include "mem/mem_ctrl.hh"
+#include "mem/mySchedule/stageScheduler/inter_stage.hh"
 
 namespace gem5::memory{
 
 //////////stageMetaData declaration////////////////////
+
+//stageG
+
+bool
+Stages::empty(){
+        return (stage1PktCount == 0) && (stage3PktCount == 0);
+}
 
 //stage1
 
@@ -24,7 +32,7 @@ Stages::pushToQueues(MemPacket* mpkt){
                 stage1Data[bucketId].push(mpkt);
                 //schedule stage2 if it needed
                 if (!nextStage2Event.scheduled()){
-                        schedule(nextStage2Event);
+                        schedule(nextStage2Event, curTick());
                 }
 }
 
@@ -157,7 +165,7 @@ Stages::chooseToDram(){
                                 stage3Data[nextBucket].pop_front();
                                 stage3PktCount--;
                                 stageGSize[mempkt->cpuId]--;
-                                //selBank = nextBucket;
+                                selBank = nextBucket;
                                 assert(stageGSize[mempkt->cpuId] >= 0);
                                 assert(stage3PktCount >= 0);
                                 //stat
@@ -249,7 +257,7 @@ SimObject(p)
                                                 stage1_FORMATION_THRED,
                                                 this
                                            )       
-                                    )
+                                    );
         }
         //stage 2 initialization
         lastRRBucket   = 0;
@@ -262,45 +270,5 @@ SimObject(p)
         for (auto& x : stage3Size){ x = p.st3_size_per_bank; }
         stage3Data.resize(stage3AmtBank);
 }
-
-
-//////////writeStageMetaData declaration////////////////////
-bool 
-WriteStages::serveByWriteQueue(Addr addr, 
-                               unsigned size,
-                               MemPacketQueue& srcToFind){
-        for(MemPacket* mpkt: srcToFind){
-                if ( (mpkt->addr <= addr) + 
-                     ((addr +size) <= (mpkt->addr + mpkt->size)) 
-                   )
-                {
-                        return true;
-                }
-        }
-
-}
-
-
-bool 
-WriteStages::serveByWriteQueue(Addr addr, unsigned size){
-        for (auto& stage1_buck : stage1Meta){
-                if (serveByWriteQueue(addr, size, stage1_buck.dayta)){
-                        //owner.algo_stats.serveByWriteQ++;
-                        return true;
-                }
-        }
-        for (auto& stage3_q : stage3Data){
-                if (serveByWriteQueue(addr, size, stage3_q)){
-                        //owner.algo_stats.serveByWriteQ++;
-                        return true;
-                }
-        }
-        return false;
-}
-
-WriteStages::WriteStages( const WriteStagesParams& p):
-
-Stages(p)
-{}
 
 }

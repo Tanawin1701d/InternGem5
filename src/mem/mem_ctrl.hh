@@ -294,6 +294,7 @@ class MemCtrl : public qos::MemCtrl
      */
     bool retryRdReq;
     bool retryWrReq;
+    uint8_t retryCpuId;
 
     /**
      * Bunch of things requires to setup "events" in gem5

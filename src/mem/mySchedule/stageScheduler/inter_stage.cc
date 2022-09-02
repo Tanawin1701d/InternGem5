@@ -1,5 +1,6 @@
 #include"inter_stage.hh"
-
+#include "mem/mySchedule/stageScheduler/stages.hh"
+#include "mem/mySchedule/stageScheduler/write_stages.hh"
 
 namespace gem5::memory{
 
@@ -44,31 +45,53 @@ InterStage::chooseToDram(bool is_read){
 
 bool
 InterStage::serveByWriteQueue(Addr addr, unsigned size){
-        return writeSide.serveByWriteQueue(addr, size);
+        return writeSide->serveByWriteQueue(addr, size);
 }
 
 
 std::vector<MemPacketQueue*>
 InterStage::getQueueToSelect(bool read){
         std::vector<MemPacketQueue*> ret;
-        for (MemPacketQueue& mq : (read ? readSide.stage3Data : writeSide.stage3Data) ){
+        for (MemPacketQueue& mq : (read ? readSide->stage3Data : writeSide->stage3Data) ){
                 ret.push_back(&mq);
         }
         return ret;
 }
 
-///////////// BucketMeta////////////////////////////////////////
 
-//////////////////////////////////////////////////
+qos::MemCtrl::BusState 
+InterStage::turnpolicy(qos::MemCtrl::BusState current_state){
+        return ( writeStageExceed() ) ? qos::MemCtrl::BusState::WRITE : 
+                                        qos::MemCtrl::BusState::READ; 
+                
+}
+bool
+InterStage::isWriteEmpty(){
+        return writeSide->empty();
+}
+bool
+InterStage::isReadEmpty(){
+        return readSide->empty();
+}
+bool
+InterStage::writeStageExceed(){
+        return writeSide->exceed();
+}
 
-InterStage::InterStage(const STAGE_SCHED_QueueParams &p):
-
+InterStage::InterStage(const InterStageParams &p):
 InterQueue(p),
 readSide  ( p.readStages ),
 writeSide ( p.writeStages),
 amtSrc    ( p.amt_src    )
 //algo_stats(*this)
-{}
+{
+
+        assert(readSide  != nullptr);
+        assert(writeSide != nullptr);
+        readSide ->owner = this;
+        writeSide->owner = this;
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
         // STAGE_SCHED_Queue::STAGE_SCHED_Stats::STAGE_SCHED_Stats(STAGE_SCHED_Queue& ITQ):

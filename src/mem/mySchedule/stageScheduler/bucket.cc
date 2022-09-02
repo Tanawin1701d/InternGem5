@@ -23,6 +23,20 @@ Bucket::canPop(){
 
 }
 
+bool
+Bucket::canMerge(Addr addr, unsigned size){
+       
+        for (BATCHID bid: batchOrder){
+                assert( batchMap.find(bid) != batchMap.end() );
+                for (MemPacket* mpkt : batchMap[bid].dayta){
+                        if ( (addr >= mpkt->addr)&&( (addr+size) <= (mpkt->addr + mpkt->size) ) ){
+                                return true;
+                        }
+                }
+        }
+        return false;
+}
+
 void
 Bucket::push(MemPacket* mpkt){
         //owner->owner.algo_stats.diffPushTime.sample(mpkt->queueAddedTime - lastAdded);
@@ -32,15 +46,23 @@ Bucket::push(MemPacket* mpkt){
         updateBatchStatus();
 
         /// push mempkt
+        //things must consider
+        // 1.batch order
+        // 2.batch map
+        // 3.cursize
+        // 4. mpkt batch id
         if (pushPol == OLDSMS){
                 if ( (curSize == 0) || batchMap[batchOrder.back()].isBatchReady){
                         // we start new batch
                         BATCHID newBid = (curSize) ? batchOrder.back()+1 : 0;
                         batchOrder.push_back(newBid);
                         mpkt->batchId = newBid;
+                        //construct new batch
                         Batch newStartBatch;
+                        newStartBatch.firstAddedTime = curTick();
                         newStartBatch.dayta.push_back(mpkt);
                         batchMap.insert({newBid, newStartBatch});
+                        //////////////////
                 }else{
                         // we exploit batch
                         assert(!batchOrder.empty());
@@ -50,6 +72,7 @@ Bucket::push(MemPacket* mpkt){
                 // update size of the bucket
                 //update size
                 curSize++;
+                assert(curSize <= maxSize);
         }else if (pushPol == OVERTAKE){
                 // TODO
                 panic("OVERTAKE pushing stage1 is not implemented");
@@ -62,6 +85,11 @@ Bucket::push(MemPacket* mpkt){
 MemPacket*
 Bucket::pop(){
         assert(curSize > 0);
+
+        //things must consider
+        // 1.batch order
+        // 2.batch map
+        // 3.cursize
 
         if (pushPol == OLDSMS){
 
