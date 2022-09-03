@@ -42,7 +42,12 @@ WriteStages::serveByWriteQueue(Addr addr, unsigned size){
 
 bool
 WriteStages::exceed(){
-        
+        for (Bucket& bc : stage1Data){
+                if (((float)bc.size()) >= ((float)exceed_thredshold*bc.get_maxSize()/100)   ){
+                        return true;
+                }
+        }
+        return false;
 }
 
 // WriteStages::WriteStages( const WriteStagesParams& ppc):

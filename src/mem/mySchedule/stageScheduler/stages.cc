@@ -43,10 +43,19 @@ Stages::updateAllBatchStatus(){
         }
 }
 //stage2
-Stages::STAGE2_PICK
+enums::SMS_STAGE2_PICK
 Stages::genlotto(){
-        int lot = rand() % TOTALLOTO;
-        return (lot <= SJFLOTTO) ? STAGE2_PICK::sjf : STAGE2_PICK::rr;
+
+        uint32_t lot = rand() % TOTALLOTTO;
+        for (enums::SMS_STAGE2_PICK pol  = enums::SMS_STAGE2_PICK::SMS_rr; 
+                                    pol != enums::SMS_STAGE2_PICK::Num_SMS_STAGE2_PICK; 
+                                    pol  = enums::SMS_STAGE2_PICK(pol+1)){
+                if (lot < LOTTO[pol]){
+                        return pol;
+                }
+                lot -= LOTTO[pol];
+        }
+        panic("pick policy eror");
 }
 
 void
@@ -54,10 +63,10 @@ Stages::processStage2Event(){
         assert(stage1PktCount >= 1); // check that their are packet to pick and drain
 
         updateAllBatchStatus();
-        
+        //select bucket(stage1) to inject to stage3
         if ((stage2CurState == STAGE2_STATE::pick) && (stage1PktCount > 0) ){ // their are to reason to pick if number of packet  = 0
-                STAGE2_PICK pickalgo = genlotto();
-                if (pickalgo == STAGE2_PICK::rr){
+                enums::SMS_STAGE2_PICK pickalgo = genlotto();
+                if (pickalgo == enums::SMS_STAGE2_PICK::SMS_rr){
                         //TODO build self stat
                         //owner.algo_stats.selectedByRR++;
                         QUEUEID nextBucket = (lastRRBucket + 1) % stage1AMTBUCKET;
@@ -67,7 +76,7 @@ Stages::processStage2Event(){
                         }
                         selBucket    = nextBucket;
                         lastRRBucket = nextBucket;
-                }else if ( pickalgo == STAGE2_PICK::sjf ){
+                }else if ( pickalgo == enums::SMS_STAGE2_PICK::SMS_sjf ){
                         QUEUEID nextBucket = 0;
                         uint64_t nextSize = UINT64_MAX;
                         //TODO build self stat
@@ -77,6 +86,19 @@ Stages::processStage2Event(){
                                         if ( stageGSize[iterBucket] <= nextSize ){
                                                 nextBucket = iterBucket;
                                                 nextSize   = stageGSize[iterBucket];
+                                        }
+                                }
+                        }
+                        selBucket = nextBucket;
+                }else if ( pickalgo == enums::SMS_STAGE2_PICK::SMS_s1mf){
+                        //TODO build stat
+                        QUEUEID nextBucket = 0;
+                        uint64_t nextSize  = 0;
+                        for (QUEUEID iterBucket = 0; iterBucket < stage1AMTBUCKET; iterBucket++){
+                                if (stage1Data[iterBucket].canPop()){
+                                        if ( stage1Data[iterBucket].size() > nextSize ){
+                                                nextBucket = iterBucket;
+                                                nextSize   = stage1Data[iterBucket].size();
                                         }
                                 }
                         }
@@ -102,14 +124,16 @@ Stages::processStage2Event(){
 
         }
         
-        
+        //push to stage 3 section
         if (stage2CurState == STAGE2_STATE::drain){
                 assert(stage1Data[selBucket].canPop());
+                // front did not mean retrieve head of queue only but depended policy
                 MemPacket* mpkt    = stage1Data[selBucket].front();
                 uint8_t    bankNum = mpkt->bank;
                 
                 if (!stage3full(bankNum)){
                         mpkt = stage1Data[selBucket].pop();
+                        assert(mpkt != nullptr);
                         stage3Data[bankNum].push_back(mpkt);
                         //update status
                         stage1PktCount--;
@@ -154,18 +178,18 @@ Stages::stage3full(uint8_t bankNum, uint64_t reqEntry){
 std::pair<MemPacket*, bool>
 Stages::chooseToDram(){
 
-        QUEUEID nextBucket =  selBank;
+        QUEUEID nextBank =  selBank;
         do{
-                nextBucket = (nextBucket +  1) % stage3AmtBank;
+                nextBank = (nextBank +  1) % stage3AmtBank;
 
-                if (!stage3Data[nextBucket].empty()){
-                        MemPacket*  mempkt = stage3Data[nextBucket].front();
-                         
+                if (!stage3Data[nextBank].empty()){
+                        MemPacket*  mempkt = stage3Data[nextBank].front();
+                        assert(mempkt != nullptr);
                         if (owner->mctrl->packetReady(mempkt)){
-                                stage3Data[nextBucket].pop_front();
+                                stage3Data[nextBank].pop_front();
                                 stage3PktCount--;
                                 stageGSize[mempkt->cpuId]--;
-                                selBank = nextBucket;
+                                selBank = nextBank;
                                 assert(stageGSize[mempkt->cpuId] >= 0);
                                 assert(stage3PktCount >= 0);
                                 //stat
@@ -176,7 +200,7 @@ Stages::chooseToDram(){
                         }
                 }
         }
-        while(nextBucket != selBank);
+        while(nextBank != selBank);
 
         //owner.algo_stats.batchMiss++;
         return {nullptr, false};
@@ -238,8 +262,8 @@ Stages::Stages(
 //stage1
 stage1AMTBUCKET(p.st1_amt_src),
 stage1_FORMATION_THRED(p.st1_formation_thred),
-TOTALLOTO(p.st2_tt_lotto),
-SJFLOTTO(p.st2_sjf_lotto),
+TOTALLOTTO(p.st2_tt_lotto),
+LOTTO(p.st2_vec_lotto),
 stage2TFDL(p.st2_tf_dl),
 nextStage2Event( [this]{ processStage2Event(); }, name() ),
 stage3AmtBank(p.st3_amt_bank),
@@ -253,7 +277,8 @@ SimObject(p)
         for (int i = 0; i < stage1AMTBUCKET; i++){ 
                 stage1Data.push_back(Bucket(
                                                 p.st1_size_per_src,
-                                                Bucket::pushPolicy::OLDSMS,
+                                                p.st1_pushPol,
+                                                p.st1_popPol ,
                                                 stage1_FORMATION_THRED,
                                                 this
                                            )       

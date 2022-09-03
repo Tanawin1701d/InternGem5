@@ -15,7 +15,9 @@ typedef uint8_t QUEUEID;
 
         
         class WriteStages : public Stages{
-                 
+
+            private:
+            int                         exceed_thredshold;     
 
             public:
             bool                        serveByWriteQueue(Addr addr, unsigned size);

@@ -18,5 +18,5 @@ class InterStage(InterQueue):
           self.readStages  = Stages()
           self.writeStages = WriteStages()
           self.amt_src     = num_src
-          self.readStages .init(self.amt_src, self)
-          self.writeStages.init(self.amt_src, self)
+          self.readStages .initBuck(self.amt_src)
+          self.writeStages.initBuck(self.amt_src)

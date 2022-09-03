@@ -1,10 +1,12 @@
 #ifndef __MEM_STAGESCHED_STAGE__HH__
 #define __MEM_STAGESCHED_STAGE__HH__
 
+#include <vector>
 #include"bucket.hh"
 #include "params/Stages.hh"
 #include "params/WriteStages.hh"
 #include "sim/sim_object.hh"
+#include "enums/SMS_STAGE2_PICK.hh"
 //#include "base/types.hh"
 #include "debug/SMS.hh"
 
@@ -24,7 +26,6 @@ class InterStage; // sms main
 class   Stages : public SimObject{
             public:
             enum STAGE2_STATE  {pick, drain};
-            enum STAGE2_PICK   {rr  , sjf  };
             InterStage*                  owner;
             //stageG
             std::vector<uint64_t>        stageGSize; // use to track sjf
@@ -34,8 +35,8 @@ class   Stages : public SimObject{
             std::vector<Bucket>          stage1Data;
             Tick                         stage1_FORMATION_THRED;
             //stage2
-            uint32_t                     TOTALLOTO;
-            uint32_t                     SJFLOTTO;
+            uint32_t                     TOTALLOTTO;
+            std::vector<uint32_t>        LOTTO;
             QUEUEID                      lastRRBucket;
             QUEUEID                      selBucket;
             STAGE2_STATE                 stage2CurState;
@@ -55,7 +56,7 @@ class   Stages : public SimObject{
             void                        pushToQueues(MemPacket* mpkt);
             void                        updateAllBatchStatus();
             //stage2
-            STAGE2_PICK                 genlotto();
+            enums::SMS_STAGE2_PICK      genlotto();
             void                        processStage2Event();
             //stage3
             bool                        stage3full(uint8_t bankNum, uint64_t  reqEntry = 1);

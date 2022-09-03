@@ -12,13 +12,13 @@ Bucket::canPush(uint64_t  neededEntry){
 bool 
 Bucket::canPop(){
 
-        if (pushPol == OLDSMS){
+        if (popPol == enums::SMS_PopPol::SMS_ppFIFO){
                 return (curSize > 0) ? batchMap[batchOrder.front()].isBatchReady : false;
-        }else if (pushPol == OVERTAKE){
+        }else if (popPol == enums::SMS_PopPol::SMS_FRFCFS){
                 //TODO for now overtake is not implemented
-                panic("OVERTAKE injection stage1 policy is not implemented");
+                panic("FRFCFS injection stage1 policy is not implemented");
         }else{
-                panic("invalid inject  policy");
+                panic("invalid pop  policy");
         }
 
 }
@@ -44,14 +44,13 @@ Bucket::push(MemPacket* mpkt){
         mpkt->queueAddedTime = curTick();
         //update if batch is exceed formation thredshold
         updateBatchStatus();
-
         /// push mempkt
         //things must consider
         // 1.batch order
         // 2.batch map
         // 3.cursize
         // 4. mpkt batch id
-        if (pushPol == OLDSMS){
+        if (pushPol == enums::SMS_PushPol::SMS_phFIFO){
                 if ( (curSize == 0) || batchMap[batchOrder.back()].isBatchReady){
                         // we start new batch
                         BATCHID newBid = (curSize) ? batchOrder.back()+1 : 0;
@@ -73,7 +72,7 @@ Bucket::push(MemPacket* mpkt){
                 //update size
                 curSize++;
                 assert(curSize <= maxSize);
-        }else if (pushPol == OVERTAKE){
+        }else if (pushPol == enums::SMS_PushPol::SMS_OVERTAKE){
                 // TODO
                 panic("OVERTAKE pushing stage1 is not implemented");
         }else{
@@ -90,8 +89,9 @@ Bucket::pop(){
         // 1.batch order
         // 2.batch map
         // 3.cursize
+        // 4.dont forgot to return 
 
-        if (pushPol == OLDSMS){
+        if (popPol == enums::SMS_PopPol::SMS_ppFIFO){
 
                 //select batch
                 BATCHID sel_bid = batchOrder.front();
@@ -100,6 +100,7 @@ Bucket::pop(){
                 MemPacket* mpkt = batchMap[sel_bid].dayta.front();
                 batchMap[sel_bid].dayta.pop_front();
                 curSize--;
+                assert(mpkt != nullptr);
                 //get remain batch size
                 uint64_t rem_batch_size = batchMap[sel_bid].dayta.size();
                 assert(rem_batch_size >= 0);
@@ -110,24 +111,33 @@ Bucket::pop(){
                         batchOrder.pop_front();
                         batchMap.erase(sel_bid);
                 }
+                return mpkt;
 
-        }else if (pushPol == OVERTAKE){
+        }else if (popPol == enums::SMS_PopPol::SMS_FRFCFS){
                 // TODO
-                panic("OVERTAKE pop stage1 is not implemented");
+                panic("frfcfs pop stage1 is not implemented");
         }else{
-                panic("invalid push policy");
+                panic("invalid pop policy in front() call");
         }
 }
 
 MemPacket*
 Bucket::front(){
         assert( ( !batchOrder.empty() ) && (batchMap.find(batchOrder.front()) != batchMap.end()));
-        return batchMap[batchOrder.front()].dayta.front();
+
+        if (popPol == enums::SMS_PopPol::SMS_ppFIFO){
+                return batchMap[batchOrder.front()].dayta.front();
+        }else if (popPol == enums::SMS_PopPol::SMS_FRFCFS){
+                panic("frfcfs pop stage1 is not implemented");
+        }else{
+                panic("invalid pop policy on front() call ");
+        }
 }
 
 
 void 
 Bucket::updateBatchStatus(){
+        // for now batch update status only concern last batch also for push policy OVERTAKE will dont care isBactchready variable
         //this is used to make batch ready when last batch reach the thredshold
         if (curSize == 0){
                 assert(batchOrder.empty());
@@ -142,7 +152,7 @@ Bucket::updateBatchStatus(){
 }
 
 bool 
-isRowHit(MemPacket* a, MemPacket* b){
+Bucket::isRowHit(MemPacket* a, MemPacket* b){
         return (a->rank == b->rank) && (a->bank == b->bank) && (a->row == b->row);
 }
 
@@ -153,16 +163,18 @@ Bucket::clear(){
         batchMap  .clear();
 }
 
-Bucket::Bucket(uint64_t maxSize, 
-               enum pushPolicy pushPol,
-               Tick FORMATION_THRED,
-               Stages* owner               
+Bucket::Bucket(uint64_t           _maxSize, 
+               enums::SMS_PushPol _pushPol,
+               enums::SMS_PopPol  _popPol,
+               Tick               _FORMATION_THRED,
+               Stages*            _owner               
                ):
-               maxSize(maxSize),
-               pushPol(pushPol),
-               FORMATION_THRED(FORMATION_THRED),
-               owner(owner),
-               curSize(0)
+               maxSize        (_maxSize),
+               pushPol        (_pushPol),
+               popPol         (_popPol),
+               FORMATION_THRED(_FORMATION_THRED),
+               owner          (_owner),
+               curSize        (0)
                {}
 
 

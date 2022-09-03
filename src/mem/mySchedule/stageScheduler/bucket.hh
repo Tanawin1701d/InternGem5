@@ -4,6 +4,8 @@
 #include"base/types.hh"
 #include"base/logging.hh"
 #include"sim/cur_tick.hh"
+#include "enums/SMS_PushPol.hh"
+#include "enums/SMS_PopPol.hh"
 #include<vector>
 #include<queue>
 #include<unordered_map>
@@ -24,18 +26,19 @@ namespace gem5::memory{
     };
 
     class Bucket{
-        public:
-              enum  pushPolicy {OLDSMS, OVERTAKE}; //old SMS vs overtake to exploit rowhit
         private:
               Stages*                            owner;
         const Tick                               FORMATION_THRED;
               uint64_t                           curSize;
               uint64_t                           maxSize;
-              pushPolicy                         pushPol;
+              enums::SMS_PushPol                 pushPol;
+              enums::SMS_PopPol                  popPol;
               std::unordered_map<BATCHID, Batch> batchMap;
               std::deque        <BATCHID>        batchOrder;
 
         public:
+        uint64_t size() const {return curSize;}
+        uint64_t get_maxSize() const { return maxSize; }
         bool empty() { return curSize == 0; }
         bool canPush(uint64_t neededEntry);
         bool canPop();
@@ -46,10 +49,11 @@ namespace gem5::memory{
         void updateBatchStatus(); // update last batch is reach the thredshold
         bool isRowHit(MemPacket* a, MemPacket* b);
         void clear();
-        Bucket(uint64_t maxSize, 
-               enum pushPolicy pushPol,
-               Tick FORMATION_THRED,
-               Stages* owner
+        Bucket(uint64_t           _maxSize, 
+               enums::SMS_PushPol _pushPol,
+               enums::SMS_PopPol  _popPol,
+                    Tick          _FORMATION_THRED,
+                    Stages*       _owner
               );
 
     };

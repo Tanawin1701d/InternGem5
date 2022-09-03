@@ -1,8 +1,10 @@
-from multiprocessing.util import abstract_sockets_supported
 from m5.params               import *
 from m5.SimObject            import SimObject
 #from m5.objects.InterStage   import *
 
+class SMS_PushPol    (Enum) : vals = ['SMS_phFIFO', 'SMS_OVERTAKE']
+class SMS_PopPol     (Enum) : vals = ['SMS_ppFIFO', 'SMS_FRFCFS'  ]
+class SMS_STAGE2_PICK(Enum) : vals = ['SMS_rr'  , 'SMS_sjf', 'SMS_s1mf']
 
 class Stages(SimObject):
     type       = "Stages"
@@ -12,18 +14,19 @@ class Stages(SimObject):
     st1_size_per_src      = Param.UInt64(1024, "size of per bucket src")
     st1_amt_src           = Param.UInt8(1, "amount of src")
     st1_formation_thred   = Param.Tick(40, "amount of time for batch formation")
-
+    st1_pushPol           = Param.SMS_PushPol('SMS_phFIFO', 'stage1 push policy')
+    st1_popPol            = Param.SMS_PopPol ('SMS_ppFIFO', 'stage1 pop  policy')
     
-    st2_tt_lotto          = Param.UInt32(100, "amount that loto that was given to all policy")
-    st2_sjf_lotto         = Param.UInt32(50, "amount that loto that was given to sjf")
-    st2_tf_dl             = Param.Tick  (1, "time to transfer from stage1 to stage3 per 1 memreq")
+    st2_tt_lotto          = Param.UInt32(100, "amount that loto that was given to all stage2 pick policy")
+    st2_vec_lotto         = VectorParam.UInt32([50,50,0],"vector of stage2 lotto rr sjf s1mf respectively")
+    st2_tf_dl             = Param.Tick(1, "time to transfer from stage 1 to stage 3")
 
     st3_size_per_bank     = Param.UInt64(1024, "size of per bank queue")
     st3_amt_bank          = Param.UInt8 (8, "amount of bank")
 
     #owner                 = Param.InterStage(NULL, "interstage that control read and write queue")
 
-    def init(self,nc, ow):
+    def initBuck(self,nc):
         self.st1_amt_src = nc
         #self.owner       = ow
 
@@ -33,5 +36,8 @@ class WriteStages(Stages):
     cxx_header = "mem/mySchedule/stageScheduler/write_stages.hh"
     cxx_class  = "gem5::memory::WriteStages"
 
+    exceed_thredshold    = Param.Int32(90, "thredshold limit to prevent buccket full")
 
-    
+    def __init__(self) -> None:
+        super().__init__()
+        self.st2_vec_lotto = [0,0,100]
