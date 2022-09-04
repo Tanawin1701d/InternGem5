@@ -19,8 +19,8 @@
                 "--l1i_size=16kB",
                 "--caches",
                 "-n 4 ",
-                //"--interQmemSched=STAGE_SCHED_Queue"
-                "--memSched=fcfs",                // "--interQmemSizeHelp=STAGE"
+                "--interQmemSched=STAGE_SCHED_Queue"
+                //"--memSched=frfcfs",                // "--interQmemSizeHelp=STAGE"
 
             ],
             "stopAtEntry": false,

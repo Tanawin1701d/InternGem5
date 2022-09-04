@@ -26,6 +26,7 @@ Stages::pushToQueues(MemPacket* mpkt){
                 assert(mpkt != nullptr);
                 // we do not need to update batch status dueto self called by bucket
                 //we assume that cpuId is valid because caller sanitize it
+                stage_stats.amountPkt++;
                 QUEUEID bucketId = mpkt->cpuId;
                 stageGSize[bucketId]++;
                 stage1PktCount++;
@@ -67,8 +68,7 @@ Stages::processStage2Event(){
         if ((stage2CurState == STAGE2_STATE::pick) && (stage1PktCount > 0) ){ // their are to reason to pick if number of packet  = 0
                 enums::SMS_STAGE2_PICK pickalgo = genlotto();
                 if (pickalgo == enums::SMS_STAGE2_PICK::SMS_rr){
-                        //TODO build self stat
-                        //owner.algo_stats.selectedByRR++;
+                        stage_stats.selectedByRR++;
                         QUEUEID nextBucket = (lastRRBucket + 1) % stage1AMTBUCKET;
                         while(nextBucket != lastRRBucket){ 
                                 if (stage1Data[nextBucket].canPop()){ break;}
@@ -79,8 +79,7 @@ Stages::processStage2Event(){
                 }else if ( pickalgo == enums::SMS_STAGE2_PICK::SMS_sjf ){
                         QUEUEID nextBucket = 0;
                         uint64_t nextSize = UINT64_MAX;
-                        //TODO build self stat
-                        //owner.algo_stats.selectedBySJF++;
+                        stage_stats.selectedBySJF++;
                         for (QUEUEID iterBucket = 0; iterBucket < stage1AMTBUCKET; iterBucket++){
                                 if (stage1Data[iterBucket].canPop()){
                                         if ( stageGSize[iterBucket] <= nextSize ){
@@ -91,7 +90,7 @@ Stages::processStage2Event(){
                         }
                         selBucket = nextBucket;
                 }else if ( pickalgo == enums::SMS_STAGE2_PICK::SMS_s1mf){
-                        //TODO build stat
+                        stage_stats.selectedByS1MF++;
                         QUEUEID nextBucket = 0;
                         uint64_t nextSize  = 0;
                         for (QUEUEID iterBucket = 0; iterBucket < stage1AMTBUCKET; iterBucket++){
@@ -109,6 +108,9 @@ Stages::processStage2Event(){
 
                 if (stage1Data[selBucket].canPop()){
                         stage2CurState =  STAGE2_STATE::drain;
+                        stage_stats.batchedSize.sample(stage1Data[selBucket].get_batchSize(
+                                                                                                stage1Data[selBucket].front()->batchId
+                                                                                           ));
                         DPRINTF_SMS(SMS, "---------------------------------------------------\n");
                         DPRINTF_SMS(SMS, "////////////////////////picking up\n");
                         DPRINTF_SMS(SMS, "stage1 section\n");
@@ -196,6 +198,7 @@ Stages::chooseToDram(){
                                 //TODO build self stat
                                 //owner.algo_stats.batchHit++;
                                 ///////////
+                                stage_stats.dramChooseHit++;
                                 return {mempkt, true};
                         }
                 }
@@ -203,6 +206,7 @@ Stages::chooseToDram(){
         while(nextBank != selBank);
 
         //owner.algo_stats.batchMiss++;
+        stage_stats.dramChoosemiss++;
         return {nullptr, false};
 
 }
@@ -262,12 +266,16 @@ Stages::Stages(
 //stage1
 stage1AMTBUCKET(p.st1_amt_src),
 stage1_FORMATION_THRED(p.st1_formation_thred),
+//stage2
 TOTALLOTTO(p.st2_tt_lotto),
 LOTTO(p.st2_vec_lotto),
 stage2TFDL(p.st2_tf_dl),
 nextStage2Event( [this]{ processStage2Event(); }, name() ),
+//stage3
 stage3AmtBank(p.st3_amt_bank),
-SimObject(p)
+//upper stage
+SimObject(p),
+stage_stats(*this)
 {
         //stageG
         stageGSize.resize(stage1AMTBUCKET);
@@ -280,7 +288,8 @@ SimObject(p)
                                                 p.st1_pushPol,
                                                 p.st1_popPol ,
                                                 stage1_FORMATION_THRED,
-                                                this
+                                                this,
+                                                (QUEUEID)i
                                            )       
                                     );
         }
@@ -294,6 +303,97 @@ SimObject(p)
         stage3Size.resize(stage3AmtBank);
         for (auto& x : stage3Size){ x = p.st3_size_per_bank; }
         stage3Data.resize(stage3AmtBank);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+        Stages::Stages_Stats::Stages_Stats(Stages& ITQ):
+        statistics::Group(& ITQ),
+        stages_owner(ITQ),
+        ADD_STAT(selectedByRR,
+                 statistics::units::Count::get(),
+                 "amount of times that scheduler select by using rubin"
+                ),
+        ADD_STAT(
+                selectedBySJF,
+                statistics::units::Count::get(),
+                "amount of times that scheduler select by using short job first"
+                ),
+        ADD_STAT(
+                selectedByS1MF,
+                statistics::units::Count::get(),
+                "amount of times that scheduler select by using stage1 max first"
+                ),
+        ADD_STAT(
+                dramChooseHit,
+                statistics::units::Count::get(),
+                "number of times that dram is ready in all selected batch when scheduler need to select"
+                ),
+        ADD_STAT(
+                dramChoosemiss,
+                statistics::units::Count::get(),
+                "number of time that dram is not ready in all selected batch when scheduler need to select"
+                ),
+        ADD_STAT(amountPkt,
+                 statistics::units::Count::get(),
+                 "amount of packet that get throught this stages"),
+        ADD_STAT(serveByWriteQ,
+                 statistics::units::Count::get(),
+                 "amount of memory packet that is serve by write queue"),        
+        ADD_STAT(batchExpire,
+                 statistics::units::Count::get(),
+                 "number of expire batch"),
+        ADD_STAT(exceedStage1,
+                 statistics::units::Count::get(),
+                 "for write queue, count if the req over stage1 exceed rate"),
+        ADD_STAT(exploitBatch,
+                 statistics::units::Count::get(),
+                 "amount of packet that can tie within the last of fifo stage"),
+        ADD_STAT(startNewBatch,
+                 statistics::units::Count::get(),
+                 "amount of packet that must assign new batch number"),
+        ADD_STAT(batchedSize,
+                statistics::units::Count::get(),
+                "batch size in stage1 before picked to stage3")//,
+        // ADD_STAT(diffPushTime,
+        //         statistics::units::Count::get(),
+        //         "differrent time between 2 packet arrive")
+        //,
+        // ADD_STAT(
+        //         maxSizeWriteQueue,
+        //         statistics::units::Count::get(),
+        //         "max size of mempacket that fill in each write queue"),
+        // ADD_STAT(
+        //         maxSizeReadQueue,
+        //         statistics::units::Count::get(),
+        //         "max size of mempacket that fill in each read queue")
+        {
+                using namespace statistics;
+
+                // batchExpire  .init(stages_owner.stage1AMTBUCKET);
+                // exceedStage1 .init(stages_owner.stage1AMTBUCKET);
+                // exploitBatch .init(stages_owner.stage1AMTBUCKET);
+                // startNewBatch.init(stages_owner.stage1AMTBUCKET);
+                batchedSize.init(1024).flags(nozero);
+                //diffPushTime
+                //.init(1);
+                // TODO for now we deactivate it
+
+        }
+
+        void 
+        Stages::Stages_Stats::regStats(){
+                using namespace statistics;
+                // exploitBatch .init    (STAGEQueueOwner.amtSrc);
+                // startNewBatch.init    (STAGEQueueOwner.amtSrc);
+                // maxSizeWriteQueue.init(STAGEQueueOwner.maxWriteStageSize+10).flags(nozero);
+                // maxSizeReadQueue .init(STAGEQueueOwner.maxReadStageSize +10).flags(nozero);
+                batchExpire  .init(stages_owner.stage1AMTBUCKET);
+                exceedStage1 .init(stages_owner.stage1AMTBUCKET);
+                exploitBatch .init(stages_owner.stage1AMTBUCKET);
+                startNewBatch.init(stages_owner.stage1AMTBUCKET);
+
+
 }
 
 }

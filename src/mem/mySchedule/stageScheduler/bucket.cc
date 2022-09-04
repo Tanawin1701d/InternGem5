@@ -1,8 +1,15 @@
 #include"bucket.hh"
 #include"mem/mem_ctrl.hh"
+#include"stages.hh"
 
 
 namespace gem5::memory{
+
+uint64_t
+Bucket::get_batchSize(BATCHID bid){
+        assert(batchMap.find(bid) != batchMap.end());
+        return batchMap[bid].dayta.size();
+}
 
 bool
 Bucket::canPush(uint64_t  neededEntry){
@@ -51,7 +58,14 @@ Bucket::push(MemPacket* mpkt){
         // 3.cursize
         // 4. mpkt batch id
         if (pushPol == enums::SMS_PushPol::SMS_phFIFO){
-                if ( (curSize == 0) || batchMap[batchOrder.back()].isBatchReady){
+                if ( (curSize == 0) || 
+                     batchMap[batchOrder.back()].isBatchReady ||
+                     !isRowHit(batchMap[batchOrder.back()].dayta.back(), mpkt )
+                   ){
+                        //TODO I forgot to update batch in-case different row
+                        if (curSize){
+                                batchMap[batchOrder.back()].isBatchReady = true;
+                        }
                         // we start new batch
                         BATCHID newBid = (curSize) ? batchOrder.back()+1 : 0;
                         batchOrder.push_back(newBid);
@@ -61,12 +75,17 @@ Bucket::push(MemPacket* mpkt){
                         newStartBatch.firstAddedTime = curTick();
                         newStartBatch.dayta.push_back(mpkt);
                         batchMap.insert({newBid, newStartBatch});
-                        //////////////////
+                        //stat
+                        owner->stage_stats.startNewBatch[bucketId]++;
+
                 }else{
                         // we exploit batch
                         assert(!batchOrder.empty());
                         batchMap[batchOrder.back()].dayta.push_back(mpkt);
                         mpkt->batchId = batchOrder.back();
+                        //stat
+                        owner->stage_stats.exploitBatch[bucketId]++;
+
                 }
                 // update size of the bucket
                 //update size
@@ -146,6 +165,8 @@ Bucket::updateBatchStatus(){
                 if ( (curTick() - batchMap[batchOrder.back()].firstAddedTime) >= FORMATION_THRED){
                         //TODOFIX state maybe change
                         //owner->owner.algo_stats.batchExpire++;
+                        owner->stage_stats.batchExpire[bucketId]++;
+                        //stat
                         batchMap[batchOrder.back()].isBatchReady = true;
                 }
         }
@@ -167,14 +188,17 @@ Bucket::Bucket(uint64_t           _maxSize,
                enums::SMS_PushPol _pushPol,
                enums::SMS_PopPol  _popPol,
                Tick               _FORMATION_THRED,
-               Stages*            _owner               
+               Stages*            _owner,
+               QUEUEID            _bucketId
+
                ):
                maxSize        (_maxSize),
                pushPol        (_pushPol),
                popPol         (_popPol),
                FORMATION_THRED(_FORMATION_THRED),
                owner          (_owner),
-               curSize        (0)
+               curSize        (0),
+               bucketId       (_bucketId)
                {}
 
 

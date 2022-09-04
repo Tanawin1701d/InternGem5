@@ -990,10 +990,10 @@ MemCtrl::processNextReqEvent()
     
     if (turnPolicy) {
         // select bus state - only done if QoS algorithms are in use
-        busStateNext = iterSched ? iterSched->turnpolicy(busState) : selectNextBusState();
+        busStateNext = selectNextBusState();
+    }else if (iterSched){
+        busStateNext = iterSched->turnpolicy(busState);
     }
-
-
 
 
     // detect bus state change
@@ -1071,7 +1071,7 @@ MemCtrl::processNextReqEvent()
 
             if (iterSched){
 
-                if( (!iterSched->isWriteEmpty()) && ( (drainState() == DrainState::Draining) || iterSched->writeExceed()  ) ){
+                if( (!iterSched->isWriteEmpty()) && ( (drainState() == DrainState::Draining) || iterSched->writeStageExceed()  ) ){
                     // case we must switch from read to write dueto exceed of write thredshold or simulator intend to draining
                     DPRINTF(MemCtrl,"Switching to writes due to read queue empty\n");
                     switch_to_writes = true;
@@ -1295,13 +1295,12 @@ MemCtrl::processNextReqEvent()
         isInWriteQueue.erase(burstAlign(mem_pkt->addr, mem_pkt->isDram()));
 
         // log the response
+        if (!iterSched){
         logResponse(MemCtrl::WRITE, mem_pkt->requestorId(),
                     mem_pkt->qosValue(), mem_pkt->getAddr(), 1,
                     mem_pkt->readyTime - mem_pkt->entryTime);
-
-
         // remove the request from the queue - the iterator is no longer valid
-        if (!iterSched){ // iterSched will delete automatically
+        // iterSched will delete automatically
             writeQueue[mem_pkt->qosValue()].erase(to_write);
         }
 

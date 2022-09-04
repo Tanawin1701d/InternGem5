@@ -28,12 +28,14 @@ WriteStages::serveByWriteQueue(Addr addr, unsigned size){
         for (auto& stage1_buck : stage1Data){
                 if (stage1_buck.canMerge(addr, size)){
                         //owner.algo_stats.serveByWriteQ++;
+                        stage_stats.serveByWriteQ++;
                         return true;
                 }
         }
         for (auto& stage3_q : stage3Data){
                 if (serveByWriteQueue(addr, size, stage3_q)){
                         //owner.algo_stats.serveByWriteQ++;
+                        stage_stats.serveByWriteQ++;
                         return true;
                 }
         }
@@ -42,10 +44,13 @@ WriteStages::serveByWriteQueue(Addr addr, unsigned size){
 
 bool
 WriteStages::exceed(){
+        int bucketCount = 0;
         for (Bucket& bc : stage1Data){
                 if (((float)bc.size()) >= ((float)exceed_thredshold*bc.get_maxSize()/100)   ){
+                        stage_stats.exceedStage1[bucketCount]++;
                         return true;
                 }
+                bucketCount++;
         }
         return false;
 }

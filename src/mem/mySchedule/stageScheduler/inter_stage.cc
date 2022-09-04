@@ -61,9 +61,14 @@ InterStage::getQueueToSelect(bool read){
 
 qos::MemCtrl::BusState 
 InterStage::turnpolicy(qos::MemCtrl::BusState current_state){
-        return ( writeStageExceed() ) ? qos::MemCtrl::BusState::WRITE : 
-                                        qos::MemCtrl::BusState::READ; 
-                
+
+        if (writeStageExceed()){
+                return qos::MemCtrl::BusState::WRITE;
+        }else if (isReadEmpty() && !isWriteEmpty()){
+                return qos::MemCtrl::BusState::WRITE;
+        }else{
+                return qos::MemCtrl::BusState::READ;
+        }              
 }
 bool
 InterStage::isWriteEmpty(){

@@ -13,13 +13,13 @@ class Stages(SimObject):
     
     st1_size_per_src      = Param.UInt64(1024, "size of per bucket src")
     st1_amt_src           = Param.UInt8(1, "amount of src")
-    st1_formation_thred   = Param.Tick(40, "amount of time for batch formation")
+    st1_formation_thred   = Param.Latency('40ns', "amount of time for batch formation")
     st1_pushPol           = Param.SMS_PushPol('SMS_phFIFO', 'stage1 push policy')
     st1_popPol            = Param.SMS_PopPol ('SMS_ppFIFO', 'stage1 pop  policy')
     
     st2_tt_lotto          = Param.UInt32(100, "amount that loto that was given to all stage2 pick policy")
     st2_vec_lotto         = VectorParam.UInt32([50,50,0],"vector of stage2 lotto rr sjf s1mf respectively")
-    st2_tf_dl             = Param.Tick(1, "time to transfer from stage 1 to stage 3")
+    st2_tf_dl             = Param.Latency('1ns', "time to transfer from stage 1 to stage 3")
 
     st3_size_per_bank     = Param.UInt64(1024, "size of per bank queue")
     st3_amt_bank          = Param.UInt8 (8, "amount of bank")

@@ -23,7 +23,7 @@ typedef uint8_t QUEUEID;
             bool                        serveByWriteQueue(Addr addr, unsigned size);
             bool                        serveByWriteQueue(Addr addr, unsigned size, MemPacketQueue& srcToFind);
             bool                        exceed();
-            WriteStages( const WriteStagesParams& ppc) : Stages( ppc){};
+            WriteStages( const WriteStagesParams& ppc) : exceed_thredshold(ppc.exceed_thredshold), Stages( ppc){};
 
         };
 

@@ -7,6 +7,7 @@
 #include "params/WriteStages.hh"
 #include "sim/sim_object.hh"
 #include "enums/SMS_STAGE2_PICK.hh"
+#include "base/statistics.hh"
 //#include "base/types.hh"
 #include "debug/SMS.hh"
 
@@ -27,6 +28,31 @@ class   Stages : public SimObject{
             public:
             enum STAGE2_STATE  {pick, drain};
             InterStage*                  owner;
+            //stats
+            struct Stages_Stats : public statistics::Group
+            {
+                Stages_Stats(Stages& ITQ);
+                void regStats() override;
+                Stages& stages_owner;
+
+                statistics::Scalar    selectedByRR;
+                statistics::Scalar    selectedBySJF;
+                statistics::Scalar    selectedByS1MF;
+                statistics::Scalar    dramChooseHit;
+                statistics::Scalar    dramChoosemiss;
+                statistics::Scalar    amountPkt;
+                statistics::Scalar    serveByWriteQ;
+                statistics::Vector    batchExpire;
+                statistics::Vector    exceedStage1;
+                statistics::Vector    exploitBatch;
+                statistics::Vector    startNewBatch;
+                statistics::Histogram batchedSize;
+                //statistics::Histogram diffPushTime;
+                // statistics::Histogram maxSizeReadQueue;
+
+
+            };
+            Stages_Stats stage_stats;
             //stageG
             std::vector<uint64_t>        stageGSize; // use to track sjf
             //stage1

@@ -235,6 +235,12 @@ def config_mem(options, system):
                 elif(opt_mem_sched_iter == "STAGE_SCHED_Queue"):
                     mem_ctrl.iterSched = m5.objects.InterStage()
                     mem_ctrl.iterSched.initStage(options.num_cpus)
+                    mem_ctrl.iterSched.readStages.st1_size_per_src   = 32
+                    mem_ctrl.iterSched.readStages.st3_size_per_bank  = 32
+                    mem_ctrl.iterSched.writeStages.st1_size_per_src  = 32
+                    mem_ctrl.iterSched.writeStages.st3_size_per_bank = 32
+                    
+
                     # mem_ctrl.iterSched        = ObjectList.ObjectList(getattr(m5.objects, 'InterQueue', None)).get(opt_mem_sched_iter)()
                     # mem_ctrl.iterSched.stage1_amtSrc = options.num_cpus
                     # mem_ctrl.iterSched.stage3_sizePerBank = 256
