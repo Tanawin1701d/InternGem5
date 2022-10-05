@@ -126,6 +126,10 @@ class BaseCache(ClockedObject):
 
     system = Param.System(Parent.any, "System we belong to")
 
+    #MYCODE
+    is_llc = Param.Bool(False, "detect the cache that author thinks that it should be llc")
+    # llc = last level cache
+
     # Determine if this cache sends out writebacks for clean lines, or
     # simply clean evicts. In cases where a downstream cache is mostly
     # exclusive with respect to this cache (acting as a victim cache),

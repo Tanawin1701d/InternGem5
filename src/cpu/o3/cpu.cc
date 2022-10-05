@@ -508,6 +508,9 @@ CPU::tick()
 
     commit.tick();
 
+    //MPKC inspector trigger
+    MPKCHelper.updateCycle();
+
     // Now advance the time buffers
     timeBuffer.advance();
 

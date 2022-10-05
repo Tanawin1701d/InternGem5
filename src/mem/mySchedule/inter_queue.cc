@@ -15,6 +15,7 @@ namespace memory{
 ///interQueue
 InterQueue::InterQueue(const InterQueueParams& p) : 
 mctrl(p.mc),
+sys(p.system),
 SimObject(p)
 {}
 

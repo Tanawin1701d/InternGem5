@@ -98,8 +98,8 @@ typedef uint16_t RequestorID;
 class Request
 {
   public:
-    bool fromNetwork = false;
-    int  cpuId       = -1;
+    bool fromNetwork;
+    int  cpuId;
 
     typedef uint64_t FlagsType;
     typedef uint8_t ArchFlagsType;
@@ -458,7 +458,7 @@ class Request
      *  _flags and privateFlags are cleared by Flags default
      *  constructor.)
      */
-    Request(int cpuId = -1):cpuId(cpuId){
+    Request(int cpuId = -1):cpuId(cpuId), fromNetwork(false){
         //panic_if(this->cpuId == -1, "default constructor encounter with no cpuid\n" );
     }
 
@@ -468,7 +468,7 @@ class Request
      * These fields are adequate to perform a request.
      */
     Request(Addr paddr, unsigned size, Flags flags, RequestorID id, int cpuId = -1) :
-        _paddr(paddr), _size(size), _requestorId(id), _time(curTick()), cpuId(cpuId)
+        _paddr(paddr), _size(size), _requestorId(id), _time(curTick()), cpuId(cpuId), fromNetwork(false)
     {
         //panic_if(this->cpuId == -1, "constructor1 encounter with no cpuid\n" );   
         _flags.set(flags);
@@ -478,7 +478,7 @@ class Request
 
     Request(Addr vaddr, unsigned size, Flags flags,
             RequestorID id, Addr pc, ContextID cid,
-            AtomicOpFunctorPtr atomic_op=nullptr, int cpuId = -1) : cpuId(cpuId)
+            AtomicOpFunctorPtr atomic_op=nullptr, int cpuId = -1) : cpuId(cpuId), fromNetwork(false)
     {
         //panic_if(this->cpuId == -1, "constructor2 encounter with no cpuid\n" );
         setVirt(vaddr, size, flags, id, pc, std::move(atomic_op));

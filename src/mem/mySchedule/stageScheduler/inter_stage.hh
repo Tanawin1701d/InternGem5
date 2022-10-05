@@ -3,7 +3,8 @@
 
 #include "params/InterStage.hh"
 #include "mem/mySchedule/inter_queue.hh"
-
+#include "sim/system.hh"
+#include "cpu/mpkc/mpkc.hh"
 
 namespace gem5{
 
@@ -49,6 +50,8 @@ class InterStage : public InterQueue{
         QUEUEID             amtSrc;
         Stages*             readSide;
         WriteStages*        writeSide;
+        bool                readByPass;
+        bool                writeByPass;
 
         //stage1//////////
         bool 
@@ -57,6 +60,16 @@ class InterStage : public InterQueue{
         writeQueueFull(unsigned int pkt_count, uint8_t subQueueId = 0) override;
         void 
         pushToQueues(MemPacket* mpkt, bool isRead) override;
+
+            //  if stage3 is full incase bypassing, it also return false
+        MPKC* 
+        getMPKC(uint8_t subQueueId); // indeed, it is cpuid
+
+        bool 
+        shouldReadByPass(unsigned int pkt_count, uint8_t subQueueId = 0);
+
+        bool 
+        shouldWriteByPass(unsigned int pkt_count, uint8_t subQueueId = 0);
 
         // stage3//////////
         [[maybe_unused]]

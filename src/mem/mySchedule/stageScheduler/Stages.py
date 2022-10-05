@@ -21,6 +21,8 @@ class Stages(SimObject):
     st2_vec_lotto         = VectorParam.UInt32([50,50,0],"vector of stage2 lotto rr sjf s1mf respectively")
     st2_tf_dl             = Param.Latency('1ns', "time to transfer from stage 1 to stage 3")
 
+    st3_BypassMPKC_thred  = Param.UInt64(3 , "maximum mpkc value that allow mempacket bypass")
+    st3_BypassLim         = Param.UInt64(16, "maximum mempkt that remain before bypassing allowed")
     st3_size_per_bank     = Param.UInt64(1024, "size of per bank queue")
     st3_amt_bank          = Param.UInt8 (8, "amount of bank")
 

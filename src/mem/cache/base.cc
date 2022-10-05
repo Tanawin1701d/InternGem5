@@ -110,6 +110,8 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
       missCount(p.max_miss_count),
       addrRanges(p.addr_ranges.begin(), p.addr_ranges.end()),
       system(p.system),
+      //MYCODE
+      is_llc(p.is_llc),
       stats(*this)
 {
     // the MSHR queue has no reserve entries as we check the MSHR
@@ -403,6 +405,7 @@ BaseCache::recvTimingReq(PacketPtr pkt)
         }
     }
 
+    //MYCODE
     if (blk != nullptr){
         blk->cpuId       = pkt->req->cpuId;
         blk->fromNetwork = pkt->req->fromNetwork;
@@ -1156,6 +1159,14 @@ BaseCache::calculateAccessLatency(const CacheBlk* blk, const uint32_t delay,
     return lat;
 }
 
+//MYCODE
+void
+BaseCache::mpkc_notify(int cpu_id){
+
+    MPKC* mpkc_ptr = system->getMPKC_MNG((cpu_id >= 0) ? ((uint8_t) cpu_id): 0);
+    mpkc_ptr->updateMiss();
+}
+
 bool
 BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                   PacketList &writebacks)
@@ -1173,6 +1184,12 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
     DPRINTF(Cache, "%s for %s %s\n", __func__, pkt->print(),
             blk ? "hit " + blk->print() : "miss");
+
+    //MYCODE
+    // notice that mpkc accept only last level cache
+    if (is_llc && !blk){
+        mpkc_notify(pkt->req->cpuId);
+    }
 
     if (pkt->req->isCacheMaintenance()) {
         // A cache maintenance operation is always forwarded to the
@@ -1264,7 +1281,6 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             blk = allocateBlock(pkt, writebacks);
             if (!blk) {
                 // no replaceable block available: give up, fwd to next level.
-                incMissCount(pkt);
                 return false;
             }
 

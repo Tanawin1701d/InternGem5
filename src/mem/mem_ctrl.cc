@@ -319,17 +319,21 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             stats.rdQLenPdf[totalReadQueueSize + respQueue.size()]++;
 
             DPRINTF(MemCtrl, "Adding to read queue\n");
+
+
+            //MYCODE
             // add meta data before added to read queue
             // mem_pkt->fromNetwork = mem_pkt->pkt->req->fromNetwork;
             // mem_pkt->cpuId = mem_pkt->pkt->req->cpuId;
             // mem_pkt->queueAddedTime = curTick();
-
+            mem_pkt->assoSize = pkt_count;
             if (mem_pkt->fromNetwork){
                 stats.mempktNetwork++;
             } else {
                 stats.mempktCpu++;
             }
             
+            //////////////////////////////////////////
             if (iterSched){
                 iterSched->pushToQueues(mem_pkt, true);
             }else{
@@ -412,9 +416,12 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
 
             DPRINTF(MemCtrl, "Adding to write queue\n");
             
+
+            //MYCODE
             // add meta dayta before add to queue
             assert(mem_pkt->pkt->req != nullptr);
             ///////////////////////////////////////////////////////////
+            mem_pkt->assoSize = pkt_count;
             if (mem_pkt->fromNetwork){
                 stats.mempktNetwork++;
             } else {
@@ -423,14 +430,17 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
 
             if (iterSched){
                 iterSched->pushToQueues(mem_pkt, false);
+                isInWriteQueue.insert(burstAlign(addr, is_dram));
+
             }else{
                 writeQueue[mem_pkt->qosValue()].push_back(mem_pkt);
+                isInWriteQueue.insert(burstAlign(addr, is_dram));
+
                 // log packet
                 logRequest(MemCtrl::WRITE, pkt->requestorId(), pkt->qosValue(),
                            mem_pkt->addr, 1);
                 assert(totalWriteQueueSize == isInWriteQueue.size());
             }
-            isInWriteQueue.insert(burstAlign(addr, is_dram));
 
             // Update stats
             stats.avgWrQLen = totalWriteQueueSize;

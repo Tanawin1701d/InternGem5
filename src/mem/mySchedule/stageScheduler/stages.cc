@@ -13,6 +13,39 @@ Stages::empty(){
         return (stage1PktCount == 0) && (stage3PktCount == 0);
 }
 
+bool
+Stages::shouldBypass( unsigned int pkt_count,
+                      uint8_t      subQueueId,  
+                      uint64_t     mpkc_val
+                    ){
+
+        stage_stats.MPKC_val.sample(mpkc_val);
+
+        if ( (stage3PktCount >  stage3BypassLim) || (mpkc_val >= stage3BypassMPKC_thred)  ){
+                
+                if (stage3PktCount >  stage3BypassLim){
+                        stage_stats.BypassExceedLim++;
+                }
+                
+                if (mpkc_val > stage3BypassMPKC_thred){
+                        stage_stats.BypassExceedMPKC++;
+                }
+                
+                return false;
+        }
+
+        int bn = 0;
+        for (auto& q : stage3Data){
+                if ( (q.size() + pkt_count) > stage3Size[bn++]){
+                        stage_stats.BypassStage3Lim++;
+                        return false;
+                }
+        }
+
+        return true;
+
+}
+
 //stage1
 
 bool
@@ -171,6 +204,21 @@ Stages::processStage2Event(){
 };
 
 //stage3
+
+void
+Stages::pushToQueuesBypass(MemPacket* mpkt){
+        assert(mpkt);
+        assert(stage3Data[mpkt->bank].size() < stage3Size[mpkt->bank]);
+        stage_stats.amountBypass++;
+        stage3PktCount++;
+        stageGSize[mpkt->cpuId]++;
+        stage3Data[mpkt->bank].push_back(mpkt);
+        //start process next request event
+        if ( !(owner->mctrl)->requestEventScheduled() ){
+                                owner->mctrl->restartScheduler(curTick());
+        }
+}
+
 bool
 Stages::stage3full(uint8_t bankNum, uint64_t reqEntry){
         assert(bankNum < stage3Data.size());
@@ -179,6 +227,13 @@ Stages::stage3full(uint8_t bankNum, uint64_t reqEntry){
 
 std::pair<MemPacket*, bool>
 Stages::chooseToDram(){
+
+        int dbg_amt = 0;
+        for (auto& stg3_q : stage3Data){
+                if (stg3_q.size()){
+                        dbg_amt++;
+                }
+        }
 
         QUEUEID nextBank =  selBank;
         do{
@@ -199,6 +254,7 @@ Stages::chooseToDram(){
                                 //owner.algo_stats.batchHit++;
                                 ///////////
                                 stage_stats.dramChooseHit++;
+                                stage_stats.selStage3_hitDBG.sample(dbg_amt);
                                 return {mempkt, true};
                         }
                 }
@@ -207,6 +263,7 @@ Stages::chooseToDram(){
 
         //owner.algo_stats.batchMiss++;
         stage_stats.dramChoosemiss++;
+        stage_stats.selStage3_missDBG.sample(dbg_amt);
         return {nullptr, false};
 
 }
@@ -272,6 +329,8 @@ LOTTO(p.st2_vec_lotto),
 stage2TFDL(p.st2_tf_dl),
 nextStage2Event( [this]{ processStage2Event(); }, name() ),
 //stage3
+stage3BypassMPKC_thred(p.st3_BypassMPKC_thred),
+stage3BypassLim(p.st3_BypassLim),
 stage3AmtBank(p.st3_amt_bank),
 //upper stage
 SimObject(p),
@@ -336,7 +395,10 @@ stage_stats(*this)
                 ),
         ADD_STAT(amountPkt,
                  statistics::units::Count::get(),
-                 "amount of packet that get throught this stages"),
+                 "amount of packet that get throught  stage1"),
+        ADD_STAT(amountBypass,
+                 statistics::units::Count::get(),
+                 "amount of packet that get bypass to stage3"),
         ADD_STAT(serveByWriteQ,
                  statistics::units::Count::get(),
                  "amount of memory packet that is serve by write queue"),        
@@ -354,7 +416,16 @@ stage_stats(*this)
                  "amount of packet that must assign new batch number"),
         ADD_STAT(batchedSize,
                 statistics::units::Count::get(),
-                "batch size in stage1 before picked to stage3")//,
+                "batch size in stage1 before picked to stage3"),
+        ADD_STAT(selStage3_hitDBG,
+                statistics::units::Count::get(),
+                "incase stage3 selection is hit so sample stage3"),
+        ADD_STAT(selStage3_missDBG,
+                statistics::units::Count::get(),
+                "incase stage3 selection is hit so sample stage3"),
+        ADD_STAT(MPKC_val,
+                statistics::units::Count::get(),
+                "MPKC value")
         // ADD_STAT(diffPushTime,
         //         statistics::units::Count::get(),
         //         "differrent time between 2 packet arrive")
@@ -375,6 +446,7 @@ stage_stats(*this)
                 // exploitBatch .init(stages_owner.stage1AMTBUCKET);
                 // startNewBatch.init(stages_owner.stage1AMTBUCKET);
                 batchedSize.init(1024).flags(nozero);
+                MPKC_val.init(50);
                 //diffPushTime
                 //.init(1);
                 // TODO for now we deactivate it
@@ -392,6 +464,9 @@ stage_stats(*this)
                 exceedStage1 .init(stages_owner.stage1AMTBUCKET);
                 exploitBatch .init(stages_owner.stage1AMTBUCKET);
                 startNewBatch.init(stages_owner.stage1AMTBUCKET);
+                // debugger
+                selStage3_hitDBG.init(stages_owner.stage3AmtBank);
+                selStage3_missDBG.init(stages_owner.stage3AmtBank);
 
 
 }

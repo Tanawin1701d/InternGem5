@@ -100,6 +100,7 @@ class MemPacket
 {
   public:
 
+    unsigned int assoSize;
     int cpuId = -1;
     bool fromNetwork = false;
     Tick queueAddedTime; // tick that 

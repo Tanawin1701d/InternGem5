@@ -25,6 +25,8 @@ namespace memory
     {
         public:
         MemCtrl* mctrl;
+        System*  sys;
+
 
         virtual bool
         readQueueFull(unsigned int pkt_count,  uint8_t subQueueId) = 0;

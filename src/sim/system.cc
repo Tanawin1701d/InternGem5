@@ -75,6 +75,13 @@ namespace gem5
 
 std::vector<System *> System::systemList;
 
+//MYCODE
+MPKC* 
+System::Threads::getMPKC_MNG(uint8_t coreId){
+    panic_if (MPKC_Map.find(coreId) == MPKC_Map.end(), "can not find cpu for mpkc inspector");
+    return MPKC_Map[coreId];
+}
+
 void
 System::Threads::Thread::resume()
 {
@@ -125,6 +132,8 @@ System::Threads::insert(ThreadContext *tc, ContextID id)
     // been reallocated.
     t.resumeEvent = new EventFunctionWrapper(
             [this, id](){ thread(id).resume(); }, sys->name());
+    //MYCODE
+    MPKC_Map.insert( {( uint8_t )tc->cpuId(),   tc->getCpuPtr()->getMPKCHelper()} ); 
 }
 
 void
@@ -256,6 +265,13 @@ System::~System()
     for (uint32_t j = 0; j < numWorkIds; j++)
         delete workItemStats[j];
 }
+
+//MYCODE
+MPKC* 
+System::getMPKC_MNG(uint8_t coreId){
+    return threads.getMPKC_MNG(coreId);
+}
+
 
 Port &
 System::getPort(const std::string &if_name, PortID idx)

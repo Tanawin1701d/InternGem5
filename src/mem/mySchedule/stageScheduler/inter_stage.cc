@@ -7,22 +7,33 @@ namespace gem5::memory{
 
 ///stage scheduling////////////////////////////////////////
 
+//stage1
+
 bool
 InterStage::readQueueFull(unsigned int pkt_count, uint8_t subQueueId){
         
         assert( (amtSrc > subQueueId) && (subQueueId >= 0) );
-        
-        return !readSide->canPush(subQueueId, pkt_count);
-
+        readByPass =false;
+        if (shouldReadByPass(pkt_count, subQueueId)){
+                readByPass =true;
+                return false;
+        }else{
+                // normally case, check stage1. because of stage did not intend to bypass
+                return !readSide->canPush(subQueueId, pkt_count);
+        }
 }
 
 bool
 InterStage::writeQueueFull(unsigned int pkt_count, uint8_t subQueueId){
         
         assert( (amtSrc > subQueueId) && (subQueueId >= 0) );
-        
-        return !writeSide->canPush(subQueueId, pkt_count);
-
+        writeByPass = false;
+        if (shouldWriteByPass(pkt_count, subQueueId)){
+                writeByPass = true;
+                return false;
+        }else{
+                return !writeSide->canPush(subQueueId, pkt_count);
+        }
 }
 
 void
@@ -30,13 +41,48 @@ InterStage::pushToQueues(MemPacket* mpkt, bool isRead){
         // must copy this to mempacket because main pkt may change
         mpkt->cpuId          = mpkt->pkt->req->cpuId >= 0 ? mpkt->pkt->req->cpuId : 0;
         mpkt->fromNetwork    = mpkt->pkt->req->fromNetwork;
+        // this function should be check by writeQueueFull or readQueueFull First.
+        // make allow marker work
         ////////////////////
         if (isRead){
-                readSide->pushToQueues( mpkt );
+                if (readByPass){
+                        readSide->pushToQueuesBypass(mpkt);
+                }else{
+                        readSide->pushToQueues( mpkt );
+                }
+                
         }else{
-                writeSide->pushToQueues( mpkt );
+                if (writeByPass){
+                        writeSide->pushToQueuesBypass(mpkt);
+                }else{
+                        writeSide->pushToQueues( mpkt );
+                }
+                
         }
 }
+
+MPKC*
+InterStage::getMPKC(uint8_t subQueueId){
+        return sys->getMPKC_MNG(subQueueId);
+}
+
+bool
+InterStage::shouldReadByPass(unsigned int pkt_count, uint8_t subQueueId){
+        MPKC* mpkc = getMPKC(subQueueId);
+        return mpkc && readSide->shouldBypass(pkt_count, subQueueId, mpkc->getMPKC());
+        // false because src has no mpkc inspector, mpkc has lower than thredshold or 
+        // stage3 is full
+}
+
+bool
+InterStage::shouldWriteByPass(unsigned int pkt_count, uint8_t subQueueId){
+        MPKC* mpkc = getMPKC(subQueueId);
+        return mpkc && writeSide->shouldBypass(pkt_count, subQueueId, mpkc->getMPKC());
+        // false because src has no mpkc inspector, mpkc has lower than thredshold or 
+        // stage3 is full
+}
+
+// stage3
 
 std::pair<MemPacket*, bool>
 InterStage::chooseToDram(bool is_read){
@@ -87,7 +133,9 @@ InterStage::InterStage(const InterStageParams &p):
 InterQueue(p),
 readSide  ( p.readStages ),
 writeSide ( p.writeStages),
-amtSrc    ( p.amt_src    )
+amtSrc    ( p.amt_src    ),
+readByPass( false),
+writeByPass(false)
 //algo_stats(*this)
 {
 

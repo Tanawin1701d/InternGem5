@@ -63,6 +63,7 @@
 #include "sim/probe/pmu.hh"
 #include "sim/probe/probe.hh"
 #include "sim/system.hh"
+#include "mpkc/mpkc.hh"
 
 //#include "debug/scheduler.hh"
 
@@ -170,7 +171,14 @@ class BaseCPU : public ClockedObject
      * group. */
     static std::unique_ptr<GlobalStats> globalStats;
 
+  protected:
+    MPKC MPKCHelper;
   public:
+    MPKC* getMPKCHelper();
+
+  public:
+
+    // assume it come from network
 
     bool fromNetwork = false;
 

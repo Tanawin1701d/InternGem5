@@ -740,6 +740,10 @@ BaseCPU::traceFunctionsInternal(Addr pc)
     }
 }
 
+MPKC*
+BaseCPU::getMPKCHelper(){
+    return &MPKCHelper;
+}
 
 BaseCPU::GlobalStats::GlobalStats(statistics::Group *parent)
     : statistics::Group(parent),

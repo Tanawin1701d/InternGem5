@@ -64,6 +64,7 @@
 #include "sim/se_signal.hh"
 #include "sim/sim_object.hh"
 #include "sim/workload.hh"
+#include "cpu/mpkc/mpkc.hh"
 
 namespace gem5
 {
@@ -129,6 +130,9 @@ class System : public SimObject, public PCEventScope
         };
 
         std::vector<Thread> threads;
+
+        //MYCODE
+        std::unordered_map<uint8_t, MPKC*> MPKC_Map;
 
         Thread &
         thread(ContextID id)
@@ -209,6 +213,9 @@ class System : public SimObject, public PCEventScope
             return thread(id).context;
         }
 
+        //MYCODE
+        MPKC* getMPKC_MNG(uint8_t coreId);
+
         void markActive(ContextID id) { thread(id).active = true; }
 
         int size() const { return threads.size(); }
@@ -231,6 +238,10 @@ class System : public SimObject, public PCEventScope
         const_iterator begin() const { return const_iterator(*this, 0); }
         const_iterator end() const { return const_iterator(*this, size()); }
     };
+
+    //MYCODE
+    // update mpkc inspector
+    MPKC* getMPKC_MNG(uint8_t coreId);
 
     /**
      * Get a reference to the system port that can be used by

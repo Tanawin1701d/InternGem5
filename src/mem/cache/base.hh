@@ -980,6 +980,10 @@ class BaseCache : public ClockedObject
      * The address range to which the cache responds on the CPU side.
      * Normally this is all possible memory addresses. */
     const AddrRangeList addrRanges;
+    //MYCODE
+    bool is_llc;
+    //
+    void mpkc_notify(int cpu_id);
 
   public:
     /** System we are currently operating in. */

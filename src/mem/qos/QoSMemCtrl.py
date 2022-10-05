@@ -46,7 +46,7 @@ class QoSMemCtrl(ClockedObject):
     cxx_header = "mem/qos/mem_ctrl.hh"
     cxx_class = 'gem5::memory::qos::MemCtrl'
     abstract = True
-
+    
     system = Param.System(Parent.any, "System that the controller belongs to.")
 
     ##### QoS support parameters ####

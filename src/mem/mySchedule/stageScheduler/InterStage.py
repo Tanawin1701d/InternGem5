@@ -10,6 +10,7 @@ class InterStage(InterQueue):
      cxx_header        =  "mem/mySchedule/stageScheduler/inter_stage.hh"
      cxx_class         =  "gem5::memory::InterStage"
 
+     
      amt_src           = Param.UInt8      (1   , "amount of src")
      readStages        = Param.Stages     (NULL, "read stage")
      writeStages       = Param.WriteStages(NULL, "write stage")
