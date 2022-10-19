@@ -126,6 +126,24 @@ parser.add_argument("-itqms", "--interQmemSched", help = "interQueue memory sche
 parser.add_argument("-nqosl", "--netQosLatency", help = "interQueue memory schedule policy maximum qos ensure", default = "1ns")
 parser.add_argument("-itqsh", "--interQmemSizeHelp", help= "what algorithm that we want to tell wheater rw q is full", default = "single")
 
+
+parser.add_argument(
+        "--pasec", 
+        action="store_true",
+        help=" for test  parsec benchmark")
+
+class Parsec(Process):
+    cwd = '/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/test-progs/memstress'
+    executable = '/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/test-progs/memstress/fluidanimate'
+    cmd = ['fluidanimate', 
+            '1', 
+            '5', 
+            'in_100K.fluid'
+            ]
+
+
+
+
 Options.addCommonOptions(parser)
 Options.addSEOptions(parser)
 
@@ -137,7 +155,13 @@ args = parser.parse_args()
 multiprocesses = []
 numThreads = 1
 
-if args.bench:
+if args.pasec:
+    for mock in range(args.num_cpus):
+        mnp = Parsec()
+        mnp.pid = 100 + mock
+        multiprocesses.append(mnp)
+
+elif args.bench:
     apps = args.bench.split("-")
     if len(apps) != args.num_cpus:
         print("number of benchmarks not equal to set num_cpus!")
@@ -173,7 +197,10 @@ if args.smt and args.num_cpus > 1:
 
 np = args.num_cpus
 mp0_path = multiprocesses[0].executable
-system = System(cpu = [CPUClass(cpu_id=i, is_from_network =  i%2 ) for i in range(np)],
+
+cpus = [CPUClass(cpu_id=i, is_from_network =  i%2 ) for i in range(np)]
+
+system = System(cpu = cpus,
                 mem_mode = test_mem_mode,
                 mem_ranges = [AddrRange(args.mem_size)],
                 cache_line_size = args.cacheline_size)

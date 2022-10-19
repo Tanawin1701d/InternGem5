@@ -24,7 +24,7 @@ class Stages(SimObject):
     st3_BypassMPKC_thred  = Param.UInt64(3 , "maximum mpkc value that allow mempacket bypass")
     st3_BypassLim         = Param.UInt64(16, "maximum mempkt that remain before bypassing allowed")
     st3_size_per_bank     = Param.UInt64(1024, "size of per bank queue")
-    st3_amt_bank          = Param.UInt8 (8, "amount of bank")
+    st3_amt_bank          = Param.UInt8 (16, "amount of bank")
 
     #owner                 = Param.InterStage(NULL, "interstage that control read and write queue")
 

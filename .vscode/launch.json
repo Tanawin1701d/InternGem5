@@ -12,16 +12,18 @@
                 //"--debug-flag=SMS",
                 "configs/learning_gem5/newBench.py" ,
                 //"--fast-forward=100000000000000000",
-                "--cmd='tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;'",
+                //"--cmd='tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;'",
+                //"--cmd='tests/test-progs/memstress/fluidanimate'",
                 //"--cmd='/home/tanawin/Work/Hwsim/netBench/cmake-build-debug/netBench1;/home/tanawin/Work/Hwsim/netBench/cmake-build-debug/netBench1;/home/tanawin/Work/Hwsim/netBench/cmake-build-debug/netBench1;/home/tanawin/Work/Hwsim/netBench/cmake-build-debug/netBench1'",
+                "--pasec",
                 "--cpu-type=DerivO3CPU" ,
                 "--l1d_size=1kB",
                 "--l1i_size=16kB",
                 "--caches",
-                "-n 4 ",
-                "--interQmemSched=STAGE_SCHED_Queue",
+                "-n 1 ",
+                //"--interQmemSched=STAGE_SCHED_Queue",
+                "--memSched=fcfs",
                 "--l2cache",
-                
                 //"--memSched=fcfs"               // "--interQmemSizeHelp=STAGE"
 
             ],

@@ -1,0 +1,5 @@
+Import('*')
+
+SimObject('InterFcfs.py', sim_objects = ['InterFcfs'])
+
+Source('inter_fcfs.cc')

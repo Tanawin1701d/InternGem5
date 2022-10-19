@@ -104,7 +104,7 @@ MemPacket*
 Bucket::pop(){
         assert(curSize > 0);
 
-        //things must consider
+        //things must be considered
         // 1.batch order
         // 2.batch map
         // 3.cursize
@@ -154,7 +154,7 @@ Bucket::front(){
 }
 
 
-void 
+void
 Bucket::updateBatchStatus(){
         // for now batch update status only concern last batch also for push policy OVERTAKE will dont care isBactchready variable
         //this is used to make batch ready when last batch reach the thredshold
@@ -192,13 +192,13 @@ Bucket::Bucket(uint64_t           _maxSize,
                QUEUEID            _bucketId
 
                ):
+               bucketId       (_bucketId),
+               owner          (_owner),               
+               FORMATION_THRED(_FORMATION_THRED),
+               curSize        (0),
                maxSize        (_maxSize),
                pushPol        (_pushPol),
-               popPol         (_popPol),
-               FORMATION_THRED(_FORMATION_THRED),
-               owner          (_owner),
-               curSize        (0),
-               bucketId       (_bucketId)
+               popPol         (_popPol)
                {}
 
 

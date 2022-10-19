@@ -164,7 +164,7 @@ Stages::processStage2Event(){
                 assert(stage1Data[selBucket].canPop());
                 // front did not mean retrieve head of queue only but depended policy
                 MemPacket* mpkt    = stage1Data[selBucket].front();
-                uint8_t    bankNum = mpkt->bank;
+                uint8_t    bankNum = mpkt->bankId;
                 
                 if (!stage3full(bankNum)){
                         mpkt = stage1Data[selBucket].pop();
@@ -208,11 +208,11 @@ Stages::processStage2Event(){
 void
 Stages::pushToQueuesBypass(MemPacket* mpkt){
         assert(mpkt);
-        assert(stage3Data[mpkt->bank].size() < stage3Size[mpkt->bank]);
+        assert(stage3Data[mpkt->bankId].size() < stage3Size[mpkt->bank]);
         stage_stats.amountBypass++;
         stage3PktCount++;
         stageGSize[mpkt->cpuId]++;
-        stage3Data[mpkt->bank].push_back(mpkt);
+        stage3Data[mpkt->bankId].push_back(mpkt);
         //start process next request event
         if ( !(owner->mctrl)->requestEventScheduled() ){
                                 owner->mctrl->restartScheduler(curTick());

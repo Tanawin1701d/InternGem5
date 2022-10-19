@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sat Aug 20 12:05:49 2022
+# Make data base, printed on Mon Oct 17 08:48:02 2022
 
 # Variables
 
@@ -41,15 +41,15 @@ GDMSESSION = ubuntu
 # environment
 XMODIFIERS = @im=ibus
 # makefile
-CURDIR := /home/tanawin/Work/Hwsim/InternGem5
+CURDIR := /media/tanawin/tanawin1701d/Project/Intern/InternGem5
 # makefile
 SHELL = /bin/sh
 # environment
-SNAP_DATA = /var/snap/code/105
+SNAP_DATA = /var/snap/code/109
 # environment
 VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupport":true}
 # environment
-JOURNAL_STREAM = 8:45918
+JOURNAL_STREAM = 8:44655
 # environment
 XDG_CONFIG_DIRS = /etc/xdg/xdg-ubuntu:/etc/xdg
 # environment
@@ -71,9 +71,9 @@ XDG_DATA_DIRS = /usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/d
 # environment
 DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
 # environment
-_ = /snap/code/105/usr/share/code/code
+_ = /snap/code/109/usr/share/code/code
 # environment
-MANAGERPID = 2595
+MANAGERPID = 1513
 # environment
 LESSOPEN = | /usr/bin/lesspipe %s
 # environment
@@ -81,33 +81,31 @@ LC_NAME = th_TH.UTF-8
 # environment
 VSCODE_CWD = /home/tanawin
 # environment
-GSETTINGS_SCHEMA_DIR = /snap/code/105/usr/share/glib-2.0/schemas
+GSETTINGS_SCHEMA_DIR = /snap/code/109/usr/share/glib-2.0/schemas
 # default
 MAKE_HOST := x86_64-pc-linux-gnu
 # environment
-PATH = /home/tanawin/.local/bin:/home/tanawin/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/tanawin/.local/share/JetBrains/Toolbox/scripts:/home/tanawin/.local/share/JetBrains/Toolbox/scripts
+PATH = /home/tanawin/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/tanawin/.local/share/JetBrains/Toolbox/scripts
 # environment
 GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
 # environment
-SESSION_MANAGER = local/kathryn:@/tmp/.ICE-unix/2804,unix/kathryn:/tmp/.ICE-unix/2804
+SESSION_MANAGER = local/kathryn:@/tmp/.ICE-unix/1733,unix/kathryn:/tmp/.ICE-unix/1733
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
 GDK_PIXBUF_MODULE_FILE = /home/tanawin/snap/code/common/.cache/gdk-pixbuf-loaders.cache
 # environment
-SNAP = /snap/code/105
+SNAP = /snap/code/109
 # environment
-SNAP_VERSION = e4503b30
+SNAP_VERSION = 64bbfbf6
 # environment
 XDG_MENU_PREFIX = gnome-
 # environment
-DISABLE_WAYLAND = 1
-# environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-INVOCATION_ID = bf84c7c4aecf44e0bcb76c0d27312713
+INVOCATION_ID = c5dd267b8ebd47c0b139434444b51c5f
 # environment
-GDK_PIXBUF_MODULEDIR = /snap/code/105/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
+GDK_PIXBUF_MODULEDIR = /snap/code/109/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
 # environment
@@ -117,19 +115,19 @@ XDG_SESSION_DESKTOP = ubuntu
 # environment
 SSH_AUTH_SOCK = /run/user/1000/keyring/ssh
 # environment
-GIO_LAUNCHED_DESKTOP_FILE_PID = 25411
+GIO_LAUNCHED_DESKTOP_FILE_PID = 2897
 # automatic
 %F = $(notdir $%)
 # environment
-DISPLAY = :1
+DISPLAY = :0
 # environment
 SNAP_INSTANCE_KEY = 
 # environment
-PWD = /home/tanawin/Work/Hwsim/InternGem5
+PWD = /media/tanawin/tanawin1701d/Project/Intern/InternGem5
 # default
 .LOADED := 
 # environment
-SSH_AGENT_PID = 2769
+SSH_AGENT_PID = 1690
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = ubuntu:GNOME
 # environment
@@ -143,7 +141,7 @@ LESSCLOSE = /usr/bin/lesspipe %s %s
 # environment
 VSCODE_CLI = 1
 # environment
-VSCODE_CODE_CACHE_PATH = /home/tanawin/.config/Code/CachedData/e4503b30fc78200f846c62cf8091b76ff5547662
+VSCODE_CODE_CACHE_PATH = /home/tanawin/.config/Code/CachedData/64bbfbf67ada9953918d72e1df2f4d8e537d340e
 # environment
 LOGNAME = tanawin
 # environment
@@ -151,7 +149,7 @@ APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
 # environment
 SNAP_LIBRARY_PATH = /var/lib/snapd/lib/gl:/var/lib/snapd/lib/gl32:/var/lib/snapd/void
 # environment
-SNAP_CONTEXT = VNc-nqoGpLMohC8yt_VnAv_qf5Pq5Sob1DyELZUYePaZS67FQDeZ
+SNAP_CONTEXT = -zckeHYVnhcZ5JrWuV6k3EcDjkD1nnSGLbeoHR-7sttB1yNKolGo
 # automatic
 +F = $(notdir $+)
 # environment
@@ -175,7 +173,7 @@ MAKECMDGOALS := all
 # environment
 QT_IM_MODULE = ibus
 # environment
-SNAP_USER_DATA = /home/tanawin/snap/code/105
+SNAP_USER_DATA = /home/tanawin/snap/code/109
 # environment
 SHLVL = 0
 # environment
@@ -185,7 +183,7 @@ MAKE_VERSION := 4.2.1
 # environment
 USER = tanawin
 # environment
-SNAP_REVISION = 105
+SNAP_REVISION = 109
 # environment
 LC_MONETARY = th_TH.UTF-8
 # makefile
@@ -203,7 +201,7 @@ MAKE_COMMAND := make
 # automatic
 *F = $(notdir $*)
 # environment
-VSCODE_IPC_HOOK = /run/user/1000/vscode-6d7d93d9-1.70.2-main.sock
+VSCODE_IPC_HOOK = /run/user/1000/vscode-6d7d93d9-1.72.0-main.sock
 # environment
 BAMF_DESKTOP_FILE_HINT = /var/lib/snapd/desktop/applications/code_code.desktop
 # makefile
@@ -212,8 +210,6 @@ MAKEFLAGS = pqrR
 MFLAGS = -pqrR
 # automatic
 *D = $(patsubst %/,%,$(dir $*))
-# environment
-PT8HOME = /opt/pt
 # automatic
 +D = $(patsubst %/,%,$(dir $+))
 # environment
@@ -221,13 +217,15 @@ GDK_BACKEND = x11
 # environment
 LC_PAPER = th_TH.UTF-8
 # environment
+NO_AT_BRIDGE = 1
+# environment
 LC_IDENTIFICATION = th_TH.UTF-8
 # environment
 QT_ACCESSIBILITY = 1
 # default
 MAKEFILES := 
 # environment
-SNAP_COOKIE = VNc-nqoGpLMohC8yt_VnAv_qf5Pq5Sob1DyELZUYePaZS67FQDeZ
+SNAP_COOKIE = -zckeHYVnhcZ5JrWuV6k3EcDjkD1nnSGLbeoHR-7sttB1yNKolGo
 # environment
 LC_NUMERIC = th_TH.UTF-8
 # automatic
@@ -261,9 +259,9 @@ LC_ADDRESS = th_TH.UTF-8
 # environment
 LANG = C
 # environment
-VSCODE_PID = 25463
+VSCODE_PID = 3164
 # variable set hash-table stats:
-# Load=125/1024=12%, Rehash=0, Collisions=22/147=15%
+# Load=124/1024=12%, Rehash=0, Collisions=22/146=15%
 
 # Pattern-specific Variable Values
 
@@ -271,7 +269,7 @@ VSCODE_PID = 25463
 
 # Directories
 
-# . (device 2051, inode 3672976): 32 files, no impossibilities.
+# . (device 2065, inode 47450490): 32 files, no impossibilities.
 
 # 32 files, no impossibilities in 1 directories.
 
@@ -330,6 +328,6 @@ GNUmakefile:
 # strcache performance: lookups = 43 / hit rate = 6%
 # hash-table stats:
 # Load=40/8192=0%, Rehash=0, Collisions=1/43=2%
-# Finished Make data base on Sat Aug 20 12:05:49 2022
+# Finished Make data base on Mon Oct 17 08:48:02 2022
 
  
