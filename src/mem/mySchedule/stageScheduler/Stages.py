@@ -39,6 +39,7 @@ class WriteStages(Stages):
     cxx_class  = "gem5::memory::WriteStages"
 
     exceed_thredshold    = Param.Int32(90, "thredshold limit to prevent buccket full")
+    lower_thredshold     = Param.Int32(35, "min thredshold to ensure writeSide will not play ping-pong")
 
     def __init__(self) -> None:
         super().__init__()

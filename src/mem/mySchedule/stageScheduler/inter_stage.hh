@@ -90,6 +90,8 @@ class InterStage : public InterQueue{
         isReadEmpty() override;
         bool
         writeStageExceed() override;
+        bool
+        writeStageLower() ; // lower the thredshold is not virtual function
         //////////////////
         public:
             InterStage(const InterStageParams &p);

@@ -17,13 +17,18 @@ typedef uint8_t QUEUEID;
         class WriteStages : public Stages{
 
             private:
-            int                         exceed_thredshold;     
+            int                         exceed_thredshold;
+            int                         lower_thredshold;    
 
             public:
             bool                        serveByWriteQueue(Addr addr, unsigned size);
             bool                        serveByWriteQueue(Addr addr, unsigned size, MemPacketQueue& srcToFind);
             bool                        exceed();
-            WriteStages( const WriteStagesParams& ppc) : exceed_thredshold(ppc.exceed_thredshold), Stages( ppc){};
+            bool                        lower();
+            WriteStages( const WriteStagesParams& ppc) : 
+            exceed_thredshold(ppc.exceed_thredshold), 
+            lower_thredshold(ppc.lower_thredshold)
+            ,Stages( ppc){};
 
         };
 

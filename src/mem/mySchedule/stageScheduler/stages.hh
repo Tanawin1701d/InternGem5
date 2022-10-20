@@ -48,6 +48,7 @@ class   Stages : public SimObject{
                 statistics::Scalar    serveByWriteQ;
                 statistics::Vector    batchExpire;
                 statistics::Vector    exceedStage1;
+                statistics::Vector    lowerStage1;
                 statistics::Vector    exploitBatch;
                 statistics::Vector    startNewBatch;
                 statistics::Histogram batchedSize;

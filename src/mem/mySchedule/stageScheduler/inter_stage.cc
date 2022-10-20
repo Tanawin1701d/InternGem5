@@ -108,13 +108,16 @@ InterStage::getQueueToSelect(bool read){
 qos::MemCtrl::BusState 
 InterStage::turnpolicy(qos::MemCtrl::BusState current_state){
 
-        if (writeStageExceed()){
-                return qos::MemCtrl::BusState::WRITE;
-        }else if (isReadEmpty() && !isWriteEmpty()){
-                return qos::MemCtrl::BusState::WRITE;
-        }else{
-                return qos::MemCtrl::BusState::READ;
-        }              
+        if ( current_state == qos::MemCtrl::BusState::WRITE){
+                return writeStageLower() ?
+                        qos::MemCtrl::BusState::READ:
+                        qos::MemCtrl::BusState::WRITE;  
+        }
+        
+        //case read
+        return writeStageExceed() ? qos::MemCtrl::BusState::WRITE:
+                                    qos::MemCtrl::BusState::READ;
+
 }
 bool
 InterStage::isWriteEmpty(){
@@ -127,6 +130,12 @@ InterStage::isReadEmpty(){
 bool
 InterStage::writeStageExceed(){
         return writeSide->exceed();
+        // write stage1 exceeds the high thredshold
+}
+bool
+InterStage::writeStageLower(){
+        return writeSide->lower();
+        // write stage1 is lower the low thredshold
 }
 
 InterStage::InterStage(const InterStageParams &p):

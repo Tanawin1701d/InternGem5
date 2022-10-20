@@ -11,13 +11,13 @@ namespace gem5::memory{
 bool
 InterFcfs::readQueueFull(unsigned int pkt_count, uint8_t subQueueId){
         
-        return readSide.size() > qmSize;
+        return (readSide.size() + pkt_count) > qmSize;
 }
 
 bool
 InterFcfs::writeQueueFull(unsigned int pkt_count, uint8_t subQueueId){
         
-        return writeSide.size() > qmSize;
+        return (writeSide.size() + pkt_count) > qmSize;
 }
 
 void
@@ -75,13 +75,25 @@ InterFcfs::getQueueToSelect(bool read){
 qos::MemCtrl::BusState 
 InterFcfs::turnpolicy(qos::MemCtrl::BusState current_state){
 
-        if (writeStageExceed()){
-                return qos::MemCtrl::BusState::WRITE;
-        }else if (isReadEmpty() && !isWriteEmpty()){
-                return qos::MemCtrl::BusState::WRITE;
-        }else{
-                return qos::MemCtrl::BusState::READ;
-        }              
+        // if (writeStageExceed()){
+        //         return qos::MemCtrl::BusState::WRITE;
+        // }else if (isReadEmpty() && !isWriteEmpty()){
+        //         return qos::MemCtrl::BusState::WRITE;
+        // }else{
+        //         return qos::MemCtrl::BusState::READ;
+        // }
+        
+        size_t conSize = writeSide.size(); // consider r or w side
+        if ( current_state == qos::MemCtrl::BusState::WRITE){
+                return ( ( (float) conSize ) > (0.1 * qmSize)  ) ? 
+                        qos::MemCtrl::BusState::WRITE :
+                        qos::MemCtrl::BusState::READ;
+        }
+
+        return ( ( (float) conSize ) > (0.8 * qmSize)  ) ?
+                qos::MemCtrl::BusState::WRITE :
+                qos::MemCtrl::BusState::READ;
+
 }
 bool
 InterFcfs::isWriteEmpty(){
@@ -93,7 +105,7 @@ InterFcfs::isReadEmpty(){
 }
 bool
 InterFcfs::writeStageExceed(){
-        return writeSide.size() > qmSize;
+        return ( (float) writeSide.size() ) > (0.8 * qmSize);
 }
 
 InterFcfs::InterFcfs(const InterFcfsParams &p):

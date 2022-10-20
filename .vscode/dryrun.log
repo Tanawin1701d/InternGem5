@@ -1,6 +1,6 @@
 make --dry-run --always-make --keep-going --print-directory
-make: Entering directory '/media/tanawin/tanawin1701d/Project/Intern/InternGem5'
-make: Leaving directory '/media/tanawin/tanawin1701d/Project/Intern/InternGem5'
+make: Entering directory '/home/tanawin/work/InternGem5'
+make: Leaving directory '/home/tanawin/work/InternGem5'
  
 make: *** No targets specified and no makefile found.  Stop.
 

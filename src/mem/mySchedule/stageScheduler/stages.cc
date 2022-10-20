@@ -408,6 +408,9 @@ stage_stats(*this)
         ADD_STAT(exceedStage1,
                  statistics::units::Count::get(),
                  "for write queue, count if the req over stage1 exceed rate"),
+        ADD_STAT(lowerStage1,
+                 statistics::units::Count::get(),
+                 "for write queue, count if the req below stage1 min rate"),
         ADD_STAT(exploitBatch,
                  statistics::units::Count::get(),
                  "amount of packet that can tie within the last of fifo stage"),
@@ -462,6 +465,7 @@ stage_stats(*this)
                 // maxSizeReadQueue .init(STAGEQueueOwner.maxReadStageSize +10).flags(nozero);
                 batchExpire  .init(stages_owner.stage1AMTBUCKET);
                 exceedStage1 .init(stages_owner.stage1AMTBUCKET);
+                lowerStage1  .init(stages_owner.stage1AMTBUCKET);
                 exploitBatch .init(stages_owner.stage1AMTBUCKET);
                 startNewBatch.init(stages_owner.stage1AMTBUCKET);
                 // debugger

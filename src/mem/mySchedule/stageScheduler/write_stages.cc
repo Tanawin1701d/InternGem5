@@ -55,6 +55,20 @@ WriteStages::exceed(){
         return false;
 }
 
+bool
+WriteStages::lower(){
+        // this will ensure all bucket have current size lower than thred
+        int bucketCount = 0;
+        for (Bucket& bc : stage1Data){
+                if (((float)bc.size()) >= ((float)lower_thredshold*bc.get_maxSize()/100)   ){
+                        stage_stats.lowerStage1[bucketCount]++;
+                        return false;
+                }
+                bucketCount++;
+        }
+        return true;
+}
+
 // WriteStages::WriteStages( const WriteStagesParams& ppc):
 // {}
 
