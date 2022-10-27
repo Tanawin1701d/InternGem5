@@ -341,14 +341,14 @@ stage_stats(*this)
         for (auto& x : stageGSize){ x = 0; }
         //stage 1 initialization
         stage1PktCount = 0;
-        for (int i = 0; i < stage1AMTBUCKET; i++){ 
+        for (int pe_num = 0; pe_num < stage1AMTBUCKET; pe_num++){ // processing element number
                 stage1Data.push_back(Bucket(
                                                 p.st1_size_per_src,
-                                                p.st1_pushPol,
+                                                p.st1_vec_pushPol[pe_num],
                                                 p.st1_popPol ,
                                                 stage1_FORMATION_THRED,
                                                 this,
-                                                (QUEUEID)i
+                                                (QUEUEID)pe_num
                                            )       
                                     );
         }

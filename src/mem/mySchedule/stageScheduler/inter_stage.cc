@@ -108,15 +108,39 @@ InterStage::getQueueToSelect(bool read){
 qos::MemCtrl::BusState 
 InterStage::turnpolicy(qos::MemCtrl::BusState current_state){
 
+        inter_Stage_stats.turnrr_all++;
+
         if ( current_state == qos::MemCtrl::BusState::WRITE){
-                return writeStageLower() ?
-                        qos::MemCtrl::BusState::READ:
-                        qos::MemCtrl::BusState::WRITE;  
+                panic_if( !writeSide->isCoolDownStarted(),  "cool downing should be start here");
+                
+                if (writeSide->shouldCoolDownStop() || (writeSide->lower() && !isReadEmpty()) || isWriteEmpty()  ){ 
+                        // cause of higher than cooldown time or there are free enough space to switch
+                        
+                        //stat reccord
+                        if ( writeSide->shouldCoolDownStop() ){
+                                inter_Stage_stats.turnToR_cooldown++;
+                        }else if (writeSide->lower() && !isReadEmpty()){
+                                inter_Stage_stats.turnToR_lower++;
+                        }else if (isWriteEmpty()){
+                                inter_Stage_stats.turnToR_noWrite++;
+                        }
+                        ////////////////////////////////////////////////
+                        writeSide->stopOc();
+                        return qos::MemCtrl::BusState::READ;
+                }
+                return qos::MemCtrl::BusState::WRITE;
         }
         
+        
         //case read
-        return writeStageExceed() ? qos::MemCtrl::BusState::WRITE:
-                                    qos::MemCtrl::BusState::READ;
+        panic_if( writeSide->isCoolDownStarted(),  "cool downing should be start here");
+        if  ( writeStageExceed() ){
+                inter_Stage_stats.turnToW_exceed++;
+        //if  ( writeStageExceed() || (isReadEmpty() && ( !isWriteEmpty() )) ){
+                writeSide->startOc();
+                return qos::MemCtrl::BusState::WRITE;
+        }
+        return qos::MemCtrl::BusState::READ;
 
 }
 bool
@@ -140,9 +164,10 @@ InterStage::writeStageLower(){
 
 InterStage::InterStage(const InterStageParams &p):
 InterQueue(p),
+inter_Stage_stats(*this),
+amtSrc    ( p.amt_src    ),
 readSide  ( p.readStages ),
 writeSide ( p.writeStages),
-amtSrc    ( p.amt_src    ),
 readByPass( false),
 writeByPass(false)
 //algo_stats(*this)
@@ -156,77 +181,38 @@ writeByPass(false)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-        // STAGE_SCHED_Queue::STAGE_SCHED_Stats::STAGE_SCHED_Stats(STAGE_SCHED_Queue& ITQ):
-        // statistics::Group(& ITQ),
-        // STAGEQueueOwner(ITQ),
-        // ADD_STAT(selectedByRR,
-        //          statistics::units::Count::get(),
-        //          "amount of times that scheduler select by using rubin"
-        //         ),
-        // ADD_STAT(
-        //         selectedBySJF,
-        //         statistics::units::Count::get(),
-        //         "amount of times that scheduler select by using short job first"
-        //         ),
-        // ADD_STAT(
-        //         batchMiss,
-        //         statistics::units::Count::get(),
-        //         "number of time that dram is not ready in all selected batch when scheduler need to select"
-        //         ),
-        // ADD_STAT(
-        //         batchHit,
-        //         statistics::units::Count::get(),
-        //         "number of time that dram is not ready in all selected batch when scheduler need to select"
-        //         ),
-        // ADD_STAT(exploitBatch,
-        //          statistics::units::Count::get(),
-        //          "amount of packet that can tie within the last of fifo stage"),
-        // ADD_STAT(startNewBatch,
-        //          statistics::units::Count::get(),
-        //          "amount of packet that must assign new batch number"),
-        //  ADD_STAT(serveByWriteQ,
-        //          statistics::units::Count::get(),
-        //          "amount of memory packet that is serve by write queue"),
-        // ADD_STAT(batchExpire,
-        //          statistics::units::Count::get(),
-        //          "expire batch"),
-        // ADD_STAT(batchedSize,
-        //         statistics::units::Count::get(),
-        //         "batch size in stage1 before picked to stage3")//,
-        // // ADD_STAT(diffPushTime,
-        // //         statistics::units::Count::get(),
-        // //         "differrent time between 2 packet arrive")
-        // //,
-        // // ADD_STAT(
-        // //         maxSizeWriteQueue,
-        // //         statistics::units::Count::get(),
-        // //         "max size of mempacket that fill in each write queue"),
-        // // ADD_STAT(
-        // //         maxSizeReadQueue,
-        // //         statistics::units::Count::get(),
-        // //         "max size of mempacket that fill in each read queue")
-        // {
-        //         using namespace statistics;
+InterStage::INTER_STAGE_Stats::INTER_STAGE_Stats(InterStage& ITQ):
+statistics::Group(& ITQ),
+STAGEQueueOwner(ITQ),
+ADD_STAT(turnrr_all,
+         statistics::units::Count::get(),
+         "amount of times that scheduler decide turnaround policy"
+        ),
+ADD_STAT(turnToR_cooldown,
+         statistics::units::Count::get(),
+         "times that switch to read by cool down method"
+        ),
+ADD_STAT(turnToR_lower,
+         statistics::units::Count::get(),
+         "times that switch to read due to lower thredshold"
+        ),
+ADD_STAT(turnToR_noWrite,
+         statistics::units::Count::get(),
+         "times that switch to read due to lack of write request"
+        ),
+ADD_STAT(turnToW_exceed,
+         statistics::units::Count::get(),
+         "times that switch to write due to exceed of write request"
+        )
+{
+        using namespace statistics;
+}
 
-        //         batchedSize
-        //         .init(1024)
-        //         .flags(nozero);
-        //         //diffPushTime
-        //         //.init(1);
-        //         // TODO for now we deactivate it
+void 
+InterStage::INTER_STAGE_Stats::regStats(){
+        using namespace statistics;
 
-        // }
-
-        // void 
-        // STAGE_SCHED_Queue::STAGE_SCHED_Stats::regStats(){
-        //         using namespace statistics;
-        //         exploitBatch .init    (STAGEQueueOwner.amtSrc);
-        //         startNewBatch.init    (STAGEQueueOwner.amtSrc);
-        //         // maxSizeWriteQueue.init(STAGEQueueOwner.maxWriteStageSize+10).flags(nozero);
-        //         // maxSizeReadQueue .init(STAGEQueueOwner.maxReadStageSize +10).flags(nozero);
-
-
-// }
+}
 
 
 

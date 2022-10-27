@@ -56,7 +56,7 @@ Bucket::push(MemPacket* mpkt){
         // 1.batch order
         // 2.batch map
         // 3.cursize
-        // 4. mpkt batch id
+        // 4. mpkt batch id  // please remind that batch id is not unique across  buckets
         if (pushPol == enums::SMS_PushPol::SMS_phFIFO){
                 if ( (curSize == 0) || 
                      batchMap[batchOrder.back()].isBatchReady ||
@@ -92,8 +92,45 @@ Bucket::push(MemPacket* mpkt){
                 curSize++;
                 assert(curSize <= maxSize);
         }else if (pushPol == enums::SMS_PushPol::SMS_OVERTAKE){
-                // TODO
-                panic("OVERTAKE pushing stage1 is not implemented");
+                //indicate that there are some matched batchs.
+                for (BATCHID sp_batch: batchOrder){
+                        assert(batchMap.find(sp_batch) != batchMap.end());
+                        // if rowhit with in this batch while we ignore the ready status
+                        if ( isRowHit( batchMap[sp_batch].dayta.front(), mpkt) ){
+                                owner->stage_stats.exploitBatch[bucketId]++;
+                                batchMap[sp_batch].dayta.push_back(mpkt);
+                                curSize++;
+                                mpkt->batchId = sp_batch;
+                                return;
+                        }
+                }
+                // there is no row hit on any reasons;
+                // case we need to start new on any reason
+                owner->stage_stats.startNewBatch[bucketId]++;
+                BATCHID newBid;
+                if ( empty() ){
+                        newBid = 0;
+                }else{
+                        newBid = batchOrder.back()+1;
+                        /// update last batch state to ready
+                        BATCHID lastBid = batchOrder.back();
+                        assert(batchMap.find(lastBid) != batchMap.end());
+                        batchMap[lastBid].isBatchReady = true;
+
+                }
+                
+                // batch data
+                Batch newStartBatch;
+                      newStartBatch.firstAddedTime = curTick();
+                      newStartBatch.dayta.push_back(mpkt);
+                //update main data
+                mpkt->batchId = newBid;
+                batchOrder.push_back(newBid);
+                batchMap.insert({newBid, newStartBatch});
+                curSize++;
+                assert(curSize <= maxSize);
+
+
         }else{
                 panic("invalid push policy");
         }

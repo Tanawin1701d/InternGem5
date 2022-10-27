@@ -19,28 +19,32 @@ class InterStage : public InterQueue{
             
         private:
         //stat///////////////////////////////////////////
-        // struct STAGE_SCHED_Stats : public statistics::Group
-        // {
-        //     STAGE_SCHED_Stats(STAGE_SCHED_Queue& ITQ);
-        //     void regStats() override;
-        //     STAGE_SCHED_Queue& STAGEQueueOwner;
+        struct INTER_STAGE_Stats : public statistics::Group
+        {
+            INTER_STAGE_Stats(InterStage& ITQ);
+            void regStats() override;
+            InterStage& STAGEQueueOwner;
 
-        //     statistics::Scalar selectedByRR;
-        //     statistics::Scalar selectedBySJF;
-        //     statistics::Scalar batchMiss;
-        //     statistics::Scalar batchHit;
-        //     statistics::Scalar amountPkt;
-        //     statistics::Scalar serveByWriteQ;
-        //     statistics::Scalar batchExpire;
-        //     statistics::Vector exploitBatch;
-        //     statistics::Vector startNewBatch;
-        //     statistics::Histogram batchedSize;
-        //     //statistics::Histogram diffPushTime;
-        //     // statistics::Histogram maxSizeReadQueue;
+            statistics::Scalar turnrr_all;
+            statistics::Scalar turnToR_cooldown;
+            statistics::Scalar turnToR_lower;
+            statistics::Scalar turnToR_noWrite;
+            statistics::Scalar turnToW_exceed;
+            // statistics::Scalar selectedBySJF;
+            // statistics::Scalar batchMiss;
+            // statistics::Scalar batchHit;
+            // statistics::Scalar amountPkt;
+            // statistics::Scalar serveByWriteQ;
+            // statistics::Scalar batchExpire;
+            // statistics::Vector exploitBatch;
+            // statistics::Vector startNewBatch;
+            // statistics::Histogram batchedSize;
+            //statistics::Histogram diffPushTime;
+            // statistics::Histogram maxSizeReadQueue;
 
             
-        // };
-        // STAGE_SCHED_Stats algo_stats;
+        };
+        INTER_STAGE_Stats inter_Stage_stats;
         //typedef//////////////////////////////////////////
         typedef uint64_t BATCHID;
         typedef uint8_t  QUEUEID;

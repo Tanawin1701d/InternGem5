@@ -14,6 +14,7 @@ class InterStage(InterQueue):
      amt_src           = Param.UInt8      (1   , "amount of src")
      readStages        = Param.Stages     (NULL, "read stage")
      writeStages       = Param.WriteStages(NULL, "write stage")
+     
 
      def initStage(self, num_src):
           self.readStages  = Stages()

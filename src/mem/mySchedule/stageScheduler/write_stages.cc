@@ -69,6 +69,35 @@ WriteStages::lower(){
         return true;
 }
 
+void
+WriteStages::startOc(){
+        panic_if(status_CoolDown, "stage scheduling policy intend to start new"
+                                  " cooldown while previoused time slot is not stopping.");
+        
+        status_CoolDown = true;
+        wr_cool_down_st = curTick();
+
+}
+
+bool
+WriteStages::shouldCoolDownStop() const{
+        return curTick() - wr_cool_down_st >= wr_cool_down_thred;
+
+}
+
+
+bool
+WriteStages::isCoolDownStarted() const{
+        return status_CoolDown;
+}
+
+void
+WriteStages::stopOc(){
+        panic_if(!status_CoolDown, "stage scheduling policy intend to stop cooldown"
+                                        " while previoused time slot is not started.");
+        status_CoolDown = false;
+}
+
 // WriteStages::WriteStages( const WriteStagesParams& ppc):
 // {}
 

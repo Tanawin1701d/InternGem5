@@ -14,7 +14,7 @@ class Stages(SimObject):
     st1_size_per_src      = Param.UInt64(1024, "size of per bucket src")
     st1_amt_src           = Param.UInt8(1, "amount of src")
     st1_formation_thred   = Param.Latency('40ns', "amount of time for batch formation")
-    st1_pushPol           = Param.SMS_PushPol('SMS_phFIFO', 'stage1 push policy')
+    st1_vec_pushPol       = VectorParam.SMS_PushPol('SMS_phFIFO', 'stage1 push policy for each bucket')
     st1_popPol            = Param.SMS_PopPol ('SMS_ppFIFO', 'stage1 pop  policy')
     
     st2_tt_lotto          = Param.UInt32(100, "amount that loto that was given to all stage2 pick policy")
@@ -29,8 +29,9 @@ class Stages(SimObject):
     #owner                 = Param.InterStage(NULL, "interstage that control read and write queue")
 
     def initBuck(self,nc):
-        self.st1_amt_src = nc
-        #self.owner       = ow
+        self.st1_amt_src     = nc
+        self.st1_vec_pushPol = ["SMS_phFIFO" for _ in range(nc)]
+        #self.owner           = ow
 
 
 class WriteStages(Stages):
@@ -40,6 +41,7 @@ class WriteStages(Stages):
 
     exceed_thredshold    = Param.Int32(90, "thredshold limit to prevent buccket full")
     lower_thredshold     = Param.Int32(35, "min thredshold to ensure writeSide will not play ping-pong")
+    wr_cool_down_thred   = Param.Latency('700ns', "time that write stage can occupy dram")
 
     def __init__(self) -> None:
         super().__init__()

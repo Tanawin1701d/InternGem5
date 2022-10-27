@@ -237,16 +237,19 @@ def config_mem(options, system):
                     mem_ctrl.dram.page_policy = "open"
                     mem_ctrl.iterSched.initStage(options.num_cpus)
                     mem_ctrl.iterSched.readStages.st1_size_per_src   = 32
-                    mem_ctrl.iterSched.readStages.st1_formation_thred   = "1ns"
-                    mem_ctrl.iterSched.readStages.st3_size_per_bank  = 64
-                    mem_ctrl.iterSched.readStages.st3_BypassMPKC_thred      = 1000
-                    mem_ctrl.iterSched.readStages.st3_BypassLim = 1000
+                    mem_ctrl.iterSched.readStages.st1_formation_thred   = "40ns"
+                    mem_ctrl.iterSched.readStages.st1_vec_pushPol = [ 'SMS_OVERTAKE' for i in range(options.num_cpus)]
+                    mem_ctrl.iterSched.readStages.st3_size_per_bank  = 32
+                    mem_ctrl.iterSched.readStages.st3_BypassMPKC_thred      = 3
+                    mem_ctrl.iterSched.readStages.st3_BypassLim = 16
 
-                    mem_ctrl.iterSched.writeStages.st1_size_per_src  = 32
-                    mem_ctrl.iterSched.writeStages.st1_formation_thred   = "1ns"
-                    mem_ctrl.iterSched.writeStages.st3_size_per_bank = 64
+                    mem_ctrl.iterSched.writeStages.st1_size_per_src  = 64
+                    mem_ctrl.iterSched.writeStages.st1_formation_thred   = "40ns"
+                    mem_ctrl.iterSched.writeStages.st1_vec_pushPol = [ 'SMS_OVERTAKE' for i in range(options.num_cpus)]
+                    mem_ctrl.iterSched.writeStages.st3_size_per_bank = 32
                     mem_ctrl.iterSched.writeStages.st3_BypassMPKC_thred      = 0
                     mem_ctrl.iterSched.writeStages.st3_BypassLim = 0
+                    #mem_ctrl.iterSched.writeStages.wr_cool_down_thred = "3000ns"
                 elif(opt_mem_sched_iter == "FCFS_DB"):
                     mem_ctrl.iterSched = m5.objects.InterFcfs()
                     # mem_ctrl.iterSched        = ObjectList.ObjectList(getattr(m5.objects, 'InterQueue', None)).get(opt_mem_sched_iter)()
