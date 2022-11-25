@@ -222,7 +222,39 @@ class MemPacket
 // The memory packets are store in a multiple dequeue structure,
 // based on their QoS priority
 typedef std::deque<MemPacket*> MemPacketQueue;
+//MYCODE
+class memMapDebug{
+  private:
+    struct addrVis{
+      uint8_t coreId; 
+      int rank;
+      int bank;
+      int row;
+      int count;
 
+      bool operator < (const addrVis& rhs) const{
+        if (rank < rhs.rank){
+          return true;
+        }else if ( rank == rhs.rank ){
+
+          if (bank < rhs.bank){
+            return true;
+          }else if (bank == rhs.bank){
+            return row < rhs.row;
+          }
+        
+        }
+        return false;
+      }
+
+    };
+    std::string savePath;
+    std::map<uint8_t, std::set<addrVis>> logs;
+  public:
+    explicit memMapDebug(uint8_t max_pe, const std::string& sp); // maximum of processing element
+    void write();
+    void save(uint8_t coreId, int rank, int bank, int row);
+};
 
 /**
  * The memory controller is a single-channel memory controller capturing
@@ -284,6 +316,10 @@ class MemCtrl : public qos::MemCtrl
      * in front of it
      */
     MemoryPort port;
+
+    /*memory map debug*/
+    memMapDebug mmb;
+    bool        useMemMapDb;
 
     /**
      * Remember if the memory system is in timing mode

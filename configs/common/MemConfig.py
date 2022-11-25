@@ -122,6 +122,7 @@ def config_mem(options, system):
     opt_mem_sched_iter_sizeHelp = getattr(options, "interQmemSizeHelp", "single")
     opt_mem_sched_iter = getattr(options, "interQmemSched", "SimpleQueue")
     opt_mem_sched_net_acc = getattr(options, "netQosLatency", "1ns")
+    opt_mem_access_debug  = getattr(options, "memAccessDebugStat", "/tmp/gem5.txt")
 
     opt_mem_type  = getattr(options, "mem_type", None)
     opt_nvm_type  = getattr(options, "nvm_type", None)
@@ -221,11 +222,18 @@ def config_mem(options, system):
                     dram_intf.latency = '1ns'
                     print("For elastic trace, over-riding Simple Memory "
                         "latency to 1ns.")
-
+                # MYCODE
+                dram_intf.write_buffer_size  = 256
+                dram_intf.read_buffer_size   = 128
                 # Create the controller that will drive the interface
                 mem_ctrl = dram_intf.controller()
                 mem_ctrl.iterQSizePerRW      = options.num_cpus
                 mem_ctrl.qos_priorities      = options.num_cpus
+                # debug address access visualization
+                mem_ctrl.useMemMapDb         = True
+                mem_ctrl.mmdSavePath         = opt_mem_access_debug
+                mem_ctrl.mmdMaxCore          = options.num_cpus
+
                 #############################################################
                 mem_ctrl.mem_sched_policy = opt_mem_sched
                 mem_ctrl.inter_QSched_policy =  opt_mem_sched_iter_sizeHelp

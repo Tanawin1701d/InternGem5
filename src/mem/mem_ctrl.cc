@@ -82,7 +82,9 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
     stats(*this),
     myShed(p.mySchedObj),
     iterQSchedPolicy(p.inter_QSched_policy),
-    iterSched((InterQueue*)(p.iterSched))
+    iterSched((InterQueue*)(p.iterSched)),
+    useMemMapDb(p.useMemMapDb),
+    mmb(p.mmdMaxCore, p.mmdSavePath) 
 
 {
     DPRINTF(MemCtrl, "Setting up controller\n");
@@ -108,6 +110,10 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
     if (iterSched)
         iterSched->mctrl = this;
     //iterSched->setQ(&readQueue, &writeQueue);
+
+    /* register callback function for mmb*/
+    if (p.useMemMapDb)
+        registerExitCallback([this]() { mmb.write(); });
 }
 
 void
@@ -523,9 +529,9 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
                 DPRINTF(passingTest,  "this come from cpuid  %d\n", pkt->req->cpuId );
                 stats.cpu++;
                 stats.pktCpus[ (stCpuid >= 0) ? stCpuid : numPriorities() ]++;
-                if (stCpuid < 0){
-                    assert(pkt->cmd == MemCmd::WritebackClean || pkt->cmd == MemCmd::WritebackDirty);
-                }
+                // if (stCpuid < 0){
+                //     assert(pkt->cmd == MemCmd::WritebackClean || pkt->cmd == MemCmd::WritebackDirty);
+                // }
     }
 
     assert(pkt->req);
@@ -1177,12 +1183,17 @@ MemCtrl::processNextReqEvent()
                 return;
             }
 
+
             stats.selectedHit++;
         
             if (!iterSched){
                 mem_pkt = *to_read;
             }
 
+            /* mmd debug*/
+            if (useMemMapDb){
+                mmb.save(mem_pkt->cpuId, mem_pkt->rank, mem_pkt->bank, mem_pkt->row);
+            }
             doBurstAccess(mem_pkt);
 
             // sanity check
@@ -1299,6 +1310,11 @@ MemCtrl::processNextReqEvent()
         assert(mem_pkt->size <= (mem_pkt->isDram() ?
                                   dram->bytesPerBurst() :
                                   nvm->bytesPerBurst()) );
+
+        /* mmd debug*/
+        if (useMemMapDb){
+            mmb.save(mem_pkt->cpuId, mem_pkt->rank, mem_pkt->bank, mem_pkt->row);
+        }
 
         doBurstAccess(mem_pkt);
 
@@ -1737,6 +1753,46 @@ MemCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
 {
     // pass it to the memory controller
     return ctrl.recvTimingReq(pkt);
+}
+
+memMapDebug::memMapDebug(uint8_t max_pe, const std::string& sp): savePath(std::move(sp)){
+
+    for (uint8_t startId = 0; startId < max_pe; startId++){
+        logs.insert({startId, std::set<addrVis>()});
+    }
+}
+
+void
+memMapDebug::write(){
+
+    std::ofstream     desfile  = std::ofstream(savePath);
+    for (auto& lp: logs){
+        auto& cpuId      = lp.first;
+        auto& addrVisSet = lp.second;
+
+        for(auto& av: addrVisSet){
+            desfile  << ((int)cpuId)    << " " 
+                     << av.rank         << " "
+                     << av.bank         << " "  
+                     << av.row          << " " 
+                     << av.count        << "\n";
+        }
+    }
+    desfile.close();
+}
+void
+memMapDebug::save(uint8_t coreId, int rank, int bank, int row){
+    addrVis preInser = {coreId, rank, bank, row, /**count = 1*/ 1};
+    assert(rank >= 0 || bank >= 0 || row >= 0);
+    if ( logs[coreId].find(preInser) == logs[coreId].end() ){
+        logs[coreId].insert(preInser);
+    }else{
+        auto iter = logs[coreId].find(preInser);
+        addrVis preUpdate = *(iter);
+        preUpdate.count++;
+        logs[coreId].erase(iter);
+        logs[coreId].insert(preUpdate);
+    }
 }
 
 } // namespace memory

@@ -125,7 +125,7 @@ parser.add_argument("-msct" , "--memSched", help = "memory schedule policy", def
 parser.add_argument("-itqms", "--interQmemSched", help = "interQueue memory schedule policy", default = "SimpleQueue")
 parser.add_argument("-nqosl", "--netQosLatency", help = "interQueue memory schedule policy maximum qos ensure", default = "1ns")
 parser.add_argument("-itqsh", "--interQmemSizeHelp", help= "what algorithm that we want to tell wheater rw q is full", default = "single")
-
+parser.add_argument("-mdb"  , "--memAccessDebugStat", help= "path to save debug stat file", default = "/tmp/mmbgem5.txt")
 
 parser.add_argument(
         "--pasec", 

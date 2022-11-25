@@ -105,3 +105,7 @@ class MemCtrl(QoSMemCtrl):
     mySchedObj     = Param.myScheduler(myScheduler(),"fefeff")
     #iterSched      = Param.InterQueue(ALGO_WF_Queue(), "multi per read/write queue selector")
     iterSched      = Param.InterQueue(NULL, "multi per read/write queue selector")
+    
+    useMemMapDb    = Param.Bool(True, "use mem map debug to check memory access region per core")
+    mmdSavePath    = Param.String("/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/testMemaccessRegion/default.txt, path to save debug file")
+    mmdMaxCore     = Param.UInt8(16, "number of pe to check memory access region per core")

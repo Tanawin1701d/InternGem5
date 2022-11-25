@@ -100,6 +100,15 @@ def define_options(parser):
     Network.define_options(parser)
 
 def setup_memory_controllers(system, ruby, dir_cntrls, options):
+    # MYCODE
+    opt_mem_sched = getattr(options, "memSched"   , "frfcfs"    )
+    opt_mem_sched_iter_sizeHelp = getattr(options, "interQmemSizeHelp", "single")
+    opt_mem_sched_iter = getattr(options, "interQmemSched", "SimpleQueue")
+    opt_mem_sched_net_acc = getattr(options, "netQosLatency", "1ns")
+    #####################################################################
+
+
+
     if (options.numa_high_bit):
         block_size_bits = options.numa_high_bit + 1 - \
                           int(math.log(options.num_dirs, 2))
@@ -140,6 +149,36 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
                 intlv_size, options.xor_low_bit)
             if issubclass(mem_type, DRAMInterface):
                 mem_ctrl = m5.objects.MemCtrl(dram = dram_intf)
+                #############################################################
+                mem_ctrl.iterQSizePerRW      = options.num_cpus
+                mem_ctrl.qos_priorities      = options.num_cpus
+                #############################################################
+                mem_ctrl.mem_sched_policy = opt_mem_sched
+                mem_ctrl.inter_QSched_policy =  opt_mem_sched_iter_sizeHelp
+                if (opt_mem_sched_iter == "ALGO_NETQ_Queue"):
+                    mem_ctrl.iterSched        = ObjectList.ObjectList(getattr(m5.objects, 'InterQueue', None)).get(opt_mem_sched_iter)()
+                    mem_ctrl.iterSched.NetAwareThds = opt_mem_sched_net_acc
+                elif(opt_mem_sched_iter == "STAGE_SCHED_Queue"):
+                    mem_ctrl.iterSched = m5.objects.InterStage()
+                    mem_ctrl.dram.page_policy = "open"
+                    mem_ctrl.iterSched.initStage(options.num_cpus)
+                    mem_ctrl.iterSched.readStages.st1_size_per_src   = 32
+                    mem_ctrl.iterSched.readStages.st1_formation_thred   = "40ns"
+                    mem_ctrl.iterSched.readStages.st1_vec_pushPol = [ 'SMS_OVERTAKE' for i in range(options.num_cpus)]
+                    mem_ctrl.iterSched.readStages.st3_size_per_bank  = 32
+                    mem_ctrl.iterSched.readStages.st3_BypassMPKC_thred      = 3
+                    mem_ctrl.iterSched.readStages.st3_BypassLim = 16
+
+                    mem_ctrl.iterSched.writeStages.st1_size_per_src  = 64
+                    mem_ctrl.iterSched.writeStages.st1_formation_thred   = "40ns"
+                    mem_ctrl.iterSched.writeStages.st1_vec_pushPol = [ 'SMS_OVERTAKE' for i in range(options.num_cpus)]
+                    mem_ctrl.iterSched.writeStages.st3_size_per_bank = 32
+                    mem_ctrl.iterSched.writeStages.st3_BypassMPKC_thred      = 0
+                    mem_ctrl.iterSched.writeStages.st3_BypassLim = 0
+                    #mem_ctrl.iterSched.writeStages.wr_cool_down_thred = "3000ns"
+                elif(opt_mem_sched_iter == "FCFS_DB"):
+                    mem_ctrl.iterSched = m5.objects.InterFcfs()
+                ##############################################
             else:
                 mem_ctrl = dram_intf
 
