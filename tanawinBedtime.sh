@@ -9,38 +9,61 @@
 #scons build/X86/gem5.opt -j 9
 
 # time build/X86/gem5.opt \
-#  --stats-file=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluidanimate_16coreRuby/sms2.txt \
-#  --json-config=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluidanimate_16coreRuby/sms2.json \
-#  configs/learning_gem5/newBench.py 
+#  --stats-file=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluidanimateRubyTester/sms1.txt \
+#  --json-config=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluidanimateRubyTester/sms1.json \
+#  configs/learning_gem5/newBench.py \
+#  --memAccessDebugStat=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluidanimateRubyTester/sms1.txt \
 #  --ruby \
+#  --vcs-per-vnet=256 \
 #  --topology=Mesh_XY \
 #  --mesh-rows=4 \
-#  --num-dirs=4  \
+#  --num-dirs=16  \
 #  --network=simple \
-#  --mem-size=3072MB \
+#  --mem-size=8192MB \
 #  --pasec \
 #  --cpu-type=DerivO3CPU \
 #  --l1d_size=1kB \
 #  --l1i_size=16kB \
-#  --caches \
 #  -n 16 \
 #  --interQmemSched=STAGE_SCHED_Queue \
-#  --l2cache
+
+
+# time build/X86/gem5.opt \
+#  --stats-file=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluidanimateRubyTester/sms1.txt \
+#  --json-config=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluidanimateRubyTester/sms1.json \
+#  configs/learning_gem5/newBench.py \
+#  --memAccessDebugStat=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluidanimateRubyTester/sms1.txt \
+#  --ruby \
+#  --vcs-per-vnet=256 \
+#  --topology=Mesh_XY \
+#  --mesh-rows=4 \
+#  --num-dirs=16  \
+#  --network=simple \
+#  --mem-size=8192MB \
+#  --pasec \
+#  --cpu-type=DerivO3CPU \
+#  --l1d_size=1kB \
+#  --l1i_size=16kB \
+#  -n 16 \
+#  --interQmemSched=STAGE_SCHED_Queue
 
 time build/X86/gem5.opt \
  --stats-file=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/testMemBufferSize/frfcfs16_2.txt \
  --json-config=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/testMemBufferSize/frfcfs16_2.json \
  configs/learning_gem5/newBench.py \
+ --cmd=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/sqlite \
  --memAccessDebugStat=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/testMemBufferSize/frfcfs16mdb_2.txt \
  --mem-size=8192MB \
- --pasec \
  --cpu-type=DerivO3CPU \
  --l1d_size=1kB \
  --l1i_size=16kB \
  --caches \
- -n 16 \
  --memSched=frfcfs \
+ --memSchedSize=64 \
  --l2cache
+
+
+
 
 # time build/X86/gem5.opt \
 #  --stats-file=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluidanimate_8core/frfcfs.txt \

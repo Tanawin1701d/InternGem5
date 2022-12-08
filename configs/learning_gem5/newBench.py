@@ -121,8 +121,12 @@ def get_processes(args):
 parser = argparse.ArgumentParser()
 
 
-parser.add_argument("-msct" , "--memSched", help = "memory schedule policy", default = "frfcfs")
+parser.add_argument("-msct" , "--memSched", help = "memory schedule policy")
 parser.add_argument("-itqms", "--interQmemSched", help = "interQueue memory schedule policy", default = "SimpleQueue")
+parser.add_argument("-mss","--memSchedSize", help = "memCtroller such as frfcfs or fcfs buffer size for each write and read Size")
+parser.add_argument("-itqmss","--interQmemSchedSize", help = "msms stage1 Size for each buffer/bucket", default = 64)
+parser.add_argument("-wk","--workloads", help = "workload for test")
+
 parser.add_argument("-nqosl", "--netQosLatency", help = "interQueue memory schedule policy maximum qos ensure", default = "1ns")
 parser.add_argument("-itqsh", "--interQmemSizeHelp", help= "what algorithm that we want to tell wheater rw q is full", default = "single")
 parser.add_argument("-mdb"  , "--memAccessDebugStat", help= "path to save debug stat file", default = "/tmp/mmbgem5.txt")
@@ -132,16 +136,21 @@ parser.add_argument(
         action="store_true",
         help=" for test  parsec benchmark")
 
-class Parsec(Process):
+
+
+class fluidanimateWK(Process):
     cwd = '/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/test-progs/memstress'
     executable = '/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/test-progs/memstress/fluidanimate'
     cmd = ['fluidanimate', 
             '1', 
             '5', 
             'in_100K.fluid'
-            ]
+          ]
 
-
+class luWK(Process):
+    cwd = '/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/test-progs/threadHello'
+    executable = '/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/test-progs/threadHello/LU'
+    cmd = ['LU']
 
 
 Options.addCommonOptions(parser)
@@ -152,12 +161,23 @@ if '--ruby' in sys.argv:
 
 args = parser.parse_args()
 
+opt_workload = getattr(args, "workloads", "lu")
+
+
 multiprocesses = []
 numThreads = 1
 
-if args.pasec:
+if args.workloads:
+    templateWorkloads = {
+     "fluidanimate" : fluidanimateWK,
+     "lu"           : luWK 
+    }
+
+    if (opt_workload not in templateWorkloads):
+        sys.exit("no match workload")
+
     for mock in range(args.num_cpus):
-        mnp = Parsec()
+        mnp = templateWorkloads[opt_workload]()
         mnp.pid = 100 + mock
         multiprocesses.append(mnp)
 
@@ -282,6 +302,8 @@ if args.ruby:
                                         voltage_domain = system.voltage_domain)
     for i in range(np):
         ruby_port = system.ruby._cpu_ports[i]
+        #system.ruby._cpu_ports[i].deadlock_threshold = 5000000
+        ruby_port.deadlock_threshold = 50000000000
 
         # Create the interrupt controller and connect its ports to Ruby
         # Note that the interrupt controller is always present but only

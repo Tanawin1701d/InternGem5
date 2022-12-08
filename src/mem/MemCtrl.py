@@ -107,5 +107,5 @@ class MemCtrl(QoSMemCtrl):
     iterSched      = Param.InterQueue(NULL, "multi per read/write queue selector")
     
     useMemMapDb    = Param.Bool(True, "use mem map debug to check memory access region per core")
-    mmdSavePath    = Param.String("/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/testMemaccessRegion/default.txt, path to save debug file")
+    mmdSavePath    = Param.String("/tmp/default.txt", "path to save debug file")
     mmdMaxCore     = Param.UInt8(16, "number of pe to check memory access region per core")

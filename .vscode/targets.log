@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Fri Nov 25 08:30:12 2022
+# Make data base, printed on Fri Nov 25 17:11:14 2022
 
 # Variables
 
@@ -49,7 +49,7 @@ SNAP_DATA = /var/snap/code/113
 # environment
 VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupport":true}
 # environment
-JOURNAL_STREAM = 8:48277
+JOURNAL_STREAM = 8:48557
 # environment
 XDG_CONFIG_DIRS = /etc/xdg/xdg-ubuntu:/etc/xdg
 # environment
@@ -73,7 +73,7 @@ DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
 # environment
 _ = /snap/code/113/usr/share/code/code
 # environment
-MANAGERPID = 1681
+MANAGERPID = 1749
 # environment
 LESSOPEN = | /usr/bin/lesspipe %s
 # environment
@@ -89,7 +89,7 @@ PATH = /home/tanawin/.local/bin:/home/tanawin/.local/bin:/usr/local/sbin:/usr/lo
 # environment
 GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
 # environment
-SESSION_MANAGER = local/kathryn:@/tmp/.ICE-unix/1918,unix/kathryn:/tmp/.ICE-unix/1918
+SESSION_MANAGER = local/kathryn:@/tmp/.ICE-unix/1986,unix/kathryn:/tmp/.ICE-unix/1986
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
@@ -103,7 +103,7 @@ XDG_MENU_PREFIX = gnome-
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-INVOCATION_ID = 972e4213608d41d5813772b5050f2dd3
+INVOCATION_ID = f0413b496adf4e738dc842de0a4c47ae
 # environment
 GDK_PIXBUF_MODULEDIR = /snap/code/113/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 # default
@@ -115,7 +115,7 @@ XDG_SESSION_DESKTOP = ubuntu
 # environment
 SSH_AUTH_SOCK = /run/user/1000/keyring/ssh
 # environment
-GIO_LAUNCHED_DESKTOP_FILE_PID = 5722
+GIO_LAUNCHED_DESKTOP_FILE_PID = 2546
 # automatic
 %F = $(notdir $%)
 # environment
@@ -127,7 +127,7 @@ PWD = /media/tanawin/tanawin1701d/Project/Intern/InternGem5
 # default
 .LOADED := 
 # environment
-SSH_AGENT_PID = 1874
+SSH_AGENT_PID = 1947
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = ubuntu:GNOME
 # environment
@@ -257,7 +257,7 @@ LC_ADDRESS = th_TH.UTF-8
 # environment
 LANG = C
 # environment
-VSCODE_PID = 5764
+VSCODE_PID = 2590
 # variable set hash-table stats:
 # Load=123/1024=12%, Rehash=0, Collisions=22/145=15%
 
@@ -326,6 +326,6 @@ GNUmakefile:
 # strcache performance: lookups = 44 / hit rate = 6%
 # hash-table stats:
 # Load=41/8192=1%, Rehash=0, Collisions=1/44=2%
-# Finished Make data base on Fri Nov 25 08:30:12 2022
+# Finished Make data base on Fri Nov 25 17:11:14 2022
 
  

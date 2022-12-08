@@ -1,6 +1,7 @@
 {
     "version": "0.2.0",
     "configurations": [
+        
 
         {
             "name": "Launch and debug gem5 in se mode",
@@ -10,21 +11,23 @@
             "args": [
                 
                 //"--debug-flag=SMS",
+                "--stats-file=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluidanimateRubyTester/sms1.txt",
+                "--json-config=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluidanimateRubyTester/sms1.json",
                 "configs/learning_gem5/newBench.py" ,
-                //"--fast-forward=100000000000000000",
-                //"--cmd='tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;tests/test-progs/threadHello/LU;'",
-                //"--cmd='tests/test-progs/memstress/fluidanimate'",
-                //"--cmd='/home/tanawin/Work/Hwsim/netBench/cmake-build-debug/netBench1;/home/tanawin/Work/Hwsim/netBench/cmake-build-debug/netBench1;/home/tanawin/Work/Hwsim/netBench/cmake-build-debug/netBench1;/home/tanawin/Work/Hwsim/netBench/cmake-build-debug/netBench1'",
+                "--memAccessDebugStat=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluidanimateRubyTester/sms1.txt",
+                "--ruby",
+                "--vcs-per-vnet=256",
+                "--topology=Mesh_XY",
+                "--mesh-rows=4",
+                "--num-dirs=16",
+                "--network=simple",
+                "--mem-size=8192MB",
                 "--pasec",
-                "--cpu-type=DerivO3CPU" ,
+                "--cpu-type=DerivO3CPU",
                 "--l1d_size=1kB",
                 "--l1i_size=16kB",
-                "--caches",
-                "-n 1 ",
-                //"--interQmemSched=STAGE_SCHED_Queue",
-                "--memSched=fcfs",
-                "--l2cache",
-                //"--memSched=fcfs"               // "--interQmemSizeHelp=STAGE"
+                "-n 16",
+                "--interQmemSched=STAGE_SCHED_Queue"
 
             ],
             "stopAtEntry": false,

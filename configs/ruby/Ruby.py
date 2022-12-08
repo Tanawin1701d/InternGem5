@@ -162,17 +162,17 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
                     mem_ctrl.iterSched = m5.objects.InterStage()
                     mem_ctrl.dram.page_policy = "open"
                     mem_ctrl.iterSched.initStage(options.num_cpus)
-                    mem_ctrl.iterSched.readStages.st1_size_per_src   = 32
+                    mem_ctrl.iterSched.readStages.st1_size_per_src   = 128
                     mem_ctrl.iterSched.readStages.st1_formation_thred   = "40ns"
                     mem_ctrl.iterSched.readStages.st1_vec_pushPol = [ 'SMS_OVERTAKE' for i in range(options.num_cpus)]
-                    mem_ctrl.iterSched.readStages.st3_size_per_bank  = 32
+                    mem_ctrl.iterSched.readStages.st3_size_per_bank  = 128
                     mem_ctrl.iterSched.readStages.st3_BypassMPKC_thred      = 3
                     mem_ctrl.iterSched.readStages.st3_BypassLim = 16
 
-                    mem_ctrl.iterSched.writeStages.st1_size_per_src  = 64
+                    mem_ctrl.iterSched.writeStages.st1_size_per_src  = 128
                     mem_ctrl.iterSched.writeStages.st1_formation_thred   = "40ns"
                     mem_ctrl.iterSched.writeStages.st1_vec_pushPol = [ 'SMS_OVERTAKE' for i in range(options.num_cpus)]
-                    mem_ctrl.iterSched.writeStages.st3_size_per_bank = 32
+                    mem_ctrl.iterSched.writeStages.st3_size_per_bank = 128
                     mem_ctrl.iterSched.writeStages.st3_BypassMPKC_thred      = 0
                     mem_ctrl.iterSched.writeStages.st3_BypassLim = 0
                     #mem_ctrl.iterSched.writeStages.wr_cool_down_thred = "3000ns"

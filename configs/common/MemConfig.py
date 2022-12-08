@@ -118,11 +118,14 @@ def config_mem(options, system):
 
     # Semi-optional options
     # Must have either mem_type or nvm_type or both
-    opt_mem_sched = getattr(options, "memSched"   , "frfcfs"    )
+    opt_mem_sched = getattr(options, "memSched")
     opt_mem_sched_iter_sizeHelp = getattr(options, "interQmemSizeHelp", "single")
     opt_mem_sched_iter = getattr(options, "interQmemSched", "SimpleQueue")
     opt_mem_sched_net_acc = getattr(options, "netQosLatency", "1ns")
     opt_mem_access_debug  = getattr(options, "memAccessDebugStat", "/tmp/gem5.txt")
+    #memctl size config
+    opt_mem_sched_iter_st1_size = getattr(options, "interQmemSchedSize", 64) # for sms
+    opt_mem_sched_size          = getattr(options, "memSchedSize"      , 64) # for frfcfs and fcfs
 
     opt_mem_type  = getattr(options, "mem_type", None)
     opt_nvm_type  = getattr(options, "nvm_type", None)
@@ -222,9 +225,7 @@ def config_mem(options, system):
                     dram_intf.latency = '1ns'
                     print("For elastic trace, over-riding Simple Memory "
                         "latency to 1ns.")
-                # MYCODE
-                dram_intf.write_buffer_size  = 256
-                dram_intf.read_buffer_size   = 128
+                    
                 # Create the controller that will drive the interface
                 mem_ctrl = dram_intf.controller()
                 mem_ctrl.iterQSizePerRW      = options.num_cpus
@@ -235,23 +236,26 @@ def config_mem(options, system):
                 mem_ctrl.mmdMaxCore          = options.num_cpus
 
                 #############################################################
-                mem_ctrl.mem_sched_policy = opt_mem_sched
-                mem_ctrl.inter_QSched_policy =  opt_mem_sched_iter_sizeHelp
-                if (opt_mem_sched_iter == "ALGO_NETQ_Queue"):
+                if (opt_mem_sched):
+                    mem_ctrl.mem_sched_policy = opt_mem_sched
+                    mem_ctrl.inter_QSched_policy =  opt_mem_sched_iter_sizeHelp
+                    dram_intf.write_buffer_size  = opt_mem_sched_size
+                    dram_intf.read_buffer_size   = opt_mem_sched_size
+                elif (opt_mem_sched_iter == "ALGO_NETQ_Queue"):
                     mem_ctrl.iterSched        = ObjectList.ObjectList(getattr(m5.objects, 'InterQueue', None)).get(opt_mem_sched_iter)()
                     mem_ctrl.iterSched.NetAwareThds = opt_mem_sched_net_acc
                 elif(opt_mem_sched_iter == "STAGE_SCHED_Queue"):
                     mem_ctrl.iterSched = m5.objects.InterStage()
                     mem_ctrl.dram.page_policy = "open"
                     mem_ctrl.iterSched.initStage(options.num_cpus)
-                    mem_ctrl.iterSched.readStages.st1_size_per_src   = 32
+                    mem_ctrl.iterSched.readStages.st1_size_per_src   = opt_mem_sched_iter_st1_size
                     mem_ctrl.iterSched.readStages.st1_formation_thred   = "40ns"
                     mem_ctrl.iterSched.readStages.st1_vec_pushPol = [ 'SMS_OVERTAKE' for i in range(options.num_cpus)]
                     mem_ctrl.iterSched.readStages.st3_size_per_bank  = 32
                     mem_ctrl.iterSched.readStages.st3_BypassMPKC_thred      = 3
                     mem_ctrl.iterSched.readStages.st3_BypassLim = 16
 
-                    mem_ctrl.iterSched.writeStages.st1_size_per_src  = 64
+                    mem_ctrl.iterSched.writeStages.st1_size_per_src  = opt_mem_sched_iter_st1_size
                     mem_ctrl.iterSched.writeStages.st1_formation_thred   = "40ns"
                     mem_ctrl.iterSched.writeStages.st1_vec_pushPol = [ 'SMS_OVERTAKE' for i in range(options.num_cpus)]
                     mem_ctrl.iterSched.writeStages.st3_size_per_bank = 32
