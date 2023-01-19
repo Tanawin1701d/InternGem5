@@ -140,8 +140,8 @@ parser.add_argument(
 
 class fluidanimateWK(Process):
     cwd = '/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/test-progs/memstress'
-    executable = '/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/test-progs/memstress/fluidanimate'
-    cmd = ['fluidanimate', 
+    executable = '/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/test-progs/memstress/fluidanimateSerial'
+    cmd = ['fluidanimateSerial', 
             '1', 
             '5', 
             'in_100K.fluid'
@@ -151,6 +151,12 @@ class luWK(Process):
     cwd = '/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/test-progs/threadHello'
     executable = '/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/test-progs/threadHello/LU'
     cmd = ['LU']
+
+class db(Process):
+    cwd = '/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/test-progs/'
+    executable = '/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/test-progs/sqlite3'
+    cmd = ['sqlite3', 'yuiyui2' ]
+
 
 
 Options.addCommonOptions(parser)
@@ -170,7 +176,8 @@ numThreads = 1
 if args.workloads:
     templateWorkloads = {
      "fluidanimate" : fluidanimateWK,
-     "lu"           : luWK 
+     "lu"           : luWK,
+     "db"           : db
     }
 
     if (opt_workload not in templateWorkloads):

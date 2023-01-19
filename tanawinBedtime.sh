@@ -48,19 +48,16 @@
 #  --interQmemSched=STAGE_SCHED_Queue
 
 time build/X86/gem5.opt \
- --stats-file=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/testMemBufferSize/frfcfs16_2.txt \
- --json-config=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/testMemBufferSize/frfcfs16_2.json \
+ --stats-file=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/baseFluid/testThread.txt \
+ --json-config=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/baseFluid/testThread.json \
  configs/learning_gem5/newBench.py \
- --cmd=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/sqlite \
- --memAccessDebugStat=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/testMemBufferSize/frfcfs16mdb_2.txt \
- --mem-size=8192MB \
+ --memAccessDebugStat=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/testThread.txt \
+ --workloads=fluidanimate\
+ --mem-size=16GB \
  --cpu-type=DerivO3CPU \
- --l1d_size=1kB \
- --l1i_size=16kB \
  --caches \
  --memSched=frfcfs \
  --memSchedSize=64 \
- --l2cache
 
 
 
