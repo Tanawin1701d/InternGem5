@@ -829,13 +829,15 @@ TraceCPU::ElasticDataGen::printReadyList()
 }
 
 TraceCPU::ElasticDataGen::HardwareResource::HardwareResource(
-        uint16_t max_rob, uint16_t max_stores, uint16_t max_loads) :
+        uint16_t max_rob, uint16_t max_stores, uint16_t max_loads, uint16_t max_alu) :
     sizeROB(max_rob),
+    sizeAlu(max_alu),
     sizeStoreBuffer(max_stores),
     sizeLoadBuffer(max_loads),
     oldestInFlightRobNum(UINT64_MAX),
     numInFlightLoads(0),
-    numInFlightStores(0)
+    numInFlightStores(0),
+    numInFlightAlu(0)
 {}
 
 void
@@ -852,6 +854,10 @@ TraceCPU::ElasticDataGen::HardwareResource::occupy(const GraphNode* new_node)
         ++numInFlightLoads;
     } else if (new_node->isStore()) {
         ++numInFlightStores;
+    }else{
+        ++numInFlightAlu;
+        assert(numInFlightAlu >= 0);
+        assert(numInFlightAlu < ((uint16_t)-1));
     } // else if it is a non load/store node, no buffer entry is occupied
 
     printOccupancy();
@@ -898,6 +904,11 @@ TraceCPU::ElasticDataGen::HardwareResource::release(const GraphNode* done_node)
     if (done_node->isStore() && done_node->isStrictlyOrdered()) {
         releaseStoreBuffer();
     }
+
+    if (done_node->isComp()){
+        assert(numInFlightAlu);
+        --numInFlightAlu;
+    }
 }
 
 void
@@ -942,6 +953,11 @@ TraceCPU::ElasticDataGen::HardwareResource::isAvailable(
     if (num_in_flight_nodes >= sizeROB) {
         return false;
     }
+
+    if (numInFlightAlu >= sizeAlu){
+        return false;
+    }
+
     if (new_node->isLoad() && numInFlightLoads >= sizeLoadBuffer) {
         return false;
     }

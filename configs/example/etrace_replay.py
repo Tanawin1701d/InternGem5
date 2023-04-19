@@ -50,6 +50,18 @@ from common.Caches import *
 parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser)
 
+
+parser.add_argument("-msct" , "--memSched", help = "memory schedule policy")
+parser.add_argument("-itqms", "--interQmemSched", help = "interQueue memory schedule policy", default = "SimpleQueue")
+parser.add_argument("-mss","--memSchedSize", help = "memCtroller such as frfcfs or fcfs buffer size for each write and read Size")
+parser.add_argument("-itqmss","--interQmemSchedSize", help = "msms stage1 Size for each buffer/bucket", default = 64)
+parser.add_argument("-wk","--workloads", help = "workload for test")
+
+parser.add_argument("-nqosl", "--netQosLatency", help = "interQueue memory schedule policy maximum qos ensure", default = "1ns")
+parser.add_argument("-itqsh", "--interQmemSizeHelp", help= "what algorithm that we want to tell wheater rw q is full", default = "single")
+parser.add_argument("-mdb"  , "--memAccessDebugStat", help= "path to save debug stat file", default = "/tmp/mmbgem5.txt")
+
+
 if '--ruby' in sys.argv:
     print("This script does not support Ruby configuration, mainly"
     " because Trace CPU has been tested only with classic memory system")
@@ -75,6 +87,8 @@ system = System(cpu = CPUClass(cpu_id=0),
                 mem_mode = test_mem_mode,
                 mem_ranges = [AddrRange(args.mem_size)],
                 cache_line_size = args.cacheline_size)
+
+system.cpu.sizeAlu = 10000
 
 # Create a top-level voltage domain
 system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)

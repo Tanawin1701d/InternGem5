@@ -669,7 +669,7 @@ class TraceCPU : public BaseCPU
              * @param max_loads size of Load Buffer
              */
             HardwareResource(uint16_t max_rob, uint16_t max_stores,
-                                uint16_t max_loads);
+                                uint16_t max_loads, uint16_t max_alu);
 
             /**
              * Occupy appropriate structures for an issued node.
@@ -715,6 +715,8 @@ class TraceCPU : public BaseCPU
              */
             const uint16_t sizeROB;
 
+            const uint16_t sizeAlu;
+
             /**
              * The size of store buffer. This is used to throttle the max.
              * number of in-flight stores.
@@ -751,6 +753,8 @@ class TraceCPU : public BaseCPU
              * sent.
              */
             uint16_t numInFlightStores;
+
+            uint16_t numInFlightAlu;
         };
 
         /**
@@ -832,7 +836,7 @@ class TraceCPU : public BaseCPU
             execComplete(false),
             windowSize(trace.getWindowSize()),
             hwResource(params.sizeROB, params.sizeStoreBuffer,
-                       params.sizeLoadBuffer), elasticStats(&_owner, _name)
+                       params.sizeLoadBuffer, params.sizeAlu), elasticStats(&_owner, _name)
         {
             DPRINTF(TraceCPUData, "Window size in the trace is %d.\n",
                     windowSize);

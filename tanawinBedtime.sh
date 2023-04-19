@@ -48,14 +48,18 @@
 #  --interQmemSched=STAGE_SCHED_Queue
 
 time build/X86/gem5.opt \
- --stats-file=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/baseFluid/testThread.txt \
- --json-config=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/baseFluid/testThread.json \
+ --stats-file=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluid/testThread.txt \
+ --json-config=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluid/testThread.json \
  configs/learning_gem5/newBench.py \
+ --elastic-trace-en \
+ --inst-trace-file=instTrace.proto.gz \
+ --data-trace-file=dataTrace.proto.gz \
  --memAccessDebugStat=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/testThread.txt \
  --workloads=fluidanimate\
  --mem-size=16GB \
  --cpu-type=DerivO3CPU \
  --caches \
+ --mem-type=SimpleMemory\
  --memSched=frfcfs \
  --memSchedSize=64 \
 

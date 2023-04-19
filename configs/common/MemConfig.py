@@ -228,19 +228,20 @@ def config_mem(options, system):
                     
                 # Create the controller that will drive the interface
                 mem_ctrl = dram_intf.controller()
-                mem_ctrl.iterQSizePerRW      = options.num_cpus
-                mem_ctrl.qos_priorities      = options.num_cpus
+                #mem_ctrl.iterQSizePerRW      = options.num_cpus
+                #mem_ctrl.qos_priorities      = options.num_cpus
                 # debug address access visualization
-                mem_ctrl.useMemMapDb         = True
-                mem_ctrl.mmdSavePath         = opt_mem_access_debug
-                mem_ctrl.mmdMaxCore          = options.num_cpus
+                #mem_ctrl.useMemMapDb         = True
+                #mem_ctrl.mmdSavePath         = opt_mem_access_debug
+                #mem_ctrl.mmdMaxCore          = options.num_cpus
 
                 #############################################################
                 if (opt_mem_sched):
-                    mem_ctrl.mem_sched_policy = opt_mem_sched
-                    mem_ctrl.inter_QSched_policy =  opt_mem_sched_iter_sizeHelp
-                    dram_intf.write_buffer_size  = opt_mem_sched_size
-                    dram_intf.read_buffer_size   = opt_mem_sched_size
+                    #mem_ctrl.mem_sched_policy = opt_mem_sched
+                    #mem_ctrl.inter_QSched_policy =  opt_mem_sched_iter_sizeHelp
+                    #dram_intf.write_buffer_size  = opt_mem_sched_size
+                    #dram_intf.read_buffer_size   = opt_mem_sched_size
+                    pass
                 elif (opt_mem_sched_iter == "ALGO_NETQ_Queue"):
                     mem_ctrl.iterSched        = ObjectList.ObjectList(getattr(m5.objects, 'InterQueue', None)).get(opt_mem_sched_iter)()
                     mem_ctrl.iterSched.NetAwareThds = opt_mem_sched_net_acc

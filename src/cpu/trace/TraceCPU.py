@@ -66,6 +66,8 @@ class TraceCPU(BaseCPU):
     sizeLoadBuffer = Param.Unsigned(16, "Number of entries in the load buffer")
     sizeROB =  Param.Unsigned(40, "Number of entries in the re-order buffer")
 
+    sizeAlu = Param.Unsigned(15, "Number of entries of arithmetic unit")
+
     # Frequency multiplier used to effectively scale the Trace CPU frequency
     # either up or down. Note that the Trace CPU's clock domain must also be
     # changed when frequency is scaled. A default value of 1.0 means the same
