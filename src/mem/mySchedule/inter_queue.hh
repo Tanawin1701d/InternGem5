@@ -51,7 +51,8 @@ namespace memory
         isReadEmpty() = 0;
         virtual bool
         writeStageExceed() = 0;
-
+        virtual void 
+        notifyWriteBlockOccur() = 0; ///// for memory controller to say that there is block message occur
 
         InterQueue(const InterQueueParams &p);
 

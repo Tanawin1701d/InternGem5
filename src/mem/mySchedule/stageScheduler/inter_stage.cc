@@ -128,16 +128,18 @@ InterStage::turnpolicy(qos::MemCtrl::BusState current_state){
                         writeSide->stopOc();
                         return qos::MemCtrl::BusState::READ;
                 }
+                writeSide->unsetBlockOccur();
                 return qos::MemCtrl::BusState::WRITE;
         }
         
         
         //case read
         panic_if( writeSide->isCoolDownStarted(),  "cool downing should be start here");
-        if  ( writeStageExceed() ){
+        if  ( writeStageExceed() ||  writeSide->isBlockOccur()){
                 inter_Stage_stats.turnToW_exceed++;
         //if  ( writeStageExceed() || (isReadEmpty() && ( !isWriteEmpty() )) ){
                 writeSide->startOc();
+                writeSide->unsetBlockOccur();
                 return qos::MemCtrl::BusState::WRITE;
         }
         return qos::MemCtrl::BusState::READ;
@@ -161,6 +163,12 @@ InterStage::writeStageLower(){
         return writeSide->lower();
         // write stage1 is lower the low thredshold
 }
+
+void 
+InterStage::notifyWriteBlockOccur(){
+        writeSide->setBlockOccur();
+}
+
 
 InterStage::InterStage(const InterStageParams &p):
 InterQueue(p),

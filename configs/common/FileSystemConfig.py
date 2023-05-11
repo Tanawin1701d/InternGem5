@@ -57,6 +57,7 @@ def file_append(path, contents):
         f.write(str(contents))
 
 def replace_tree(path):
+    print(path)
     if isdir(path):
         rmtree(path)
     mkdir(path)

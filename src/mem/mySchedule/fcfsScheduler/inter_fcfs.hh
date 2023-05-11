@@ -44,6 +44,9 @@ class InterFcfs : public InterQueue{
         isReadEmpty() override;
         bool
         writeStageExceed() override;
+
+        void 
+        notifyWriteBlockOccur(){return;};
         //////////////////
         public:
             InterFcfs(const InterFcfsParams &p);

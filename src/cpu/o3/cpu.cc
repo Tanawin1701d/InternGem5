@@ -408,7 +408,9 @@ CPU::CPUStats::CPUStats(CPU *cpu)
       ADD_STAT(miscRegfileReads, statistics::units::Count::get(),
                "number of misc regfile reads"),
       ADD_STAT(miscRegfileWrites, statistics::units::Count::get(),
-               "number of misc regfile writes")
+               "number of misc regfile writes"),
+      ADD_STAT(lastThreadTick, statistics::units::Tick::get(),
+               "last tick that cpu used to execute Thread")
 {
     // Register any of the O3CPU's stats here.
     timesIdled
@@ -1613,6 +1615,8 @@ CPU::addThreadToExitingList(ThreadID tid)
     // exit trap event is processed in the future. Until then, it'll be still
     // an active thread that is trying to exit.
     exitingThreads.emplace(std::make_pair(tid, false));
+    cpuStats.lastThreadTick = curTick();
+
 }
 
 bool
@@ -1629,6 +1633,7 @@ CPU::scheduleThreadExitEvent(ThreadID tid)
     // exit trap event has been processed. Now, the thread is ready to exit
     // and be removed from the CPU.
     exitingThreads[tid] = true;
+
 
     // we schedule a threadExitEvent in the next cycle to properly clean
     // up the thread's states in the pipeline. threadExitEvent has lower

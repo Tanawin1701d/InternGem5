@@ -124,8 +124,8 @@ def config_mem(options, system):
     opt_mem_sched_net_acc = getattr(options, "netQosLatency", "1ns")
     opt_mem_access_debug  = getattr(options, "memAccessDebugStat", "/tmp/gem5.txt")
     #memctl size config
-    opt_mem_sched_iter_st1_size = getattr(options, "interQmemSchedSize", 64) # for sms
-    opt_mem_sched_size          = getattr(options, "memSchedSize"      , 64) # for frfcfs and fcfs
+    opt_mem_sched_iter_st1_size = getattr(options, "interQmemSchedSize", 16) # for sms
+    opt_mem_sched_size          = getattr(options, "memSchedSize"      , 32) # for frfcfs and fcfs
 
     opt_mem_type  = getattr(options, "mem_type", None)
     opt_nvm_type  = getattr(options, "nvm_type", None)
@@ -237,10 +237,10 @@ def config_mem(options, system):
 
                 #############################################################
                 if (opt_mem_sched):
-                    #mem_ctrl.mem_sched_policy = opt_mem_sched
+                    mem_ctrl.mem_sched_policy = opt_mem_sched
                     #mem_ctrl.inter_QSched_policy =  opt_mem_sched_iter_sizeHelp
-                    #dram_intf.write_buffer_size  = opt_mem_sched_size
-                    #dram_intf.read_buffer_size   = opt_mem_sched_size
+                    dram_intf.write_buffer_size  = 128
+                    dram_intf.read_buffer_size   = 128
                     pass
                 elif (opt_mem_sched_iter == "ALGO_NETQ_Queue"):
                     mem_ctrl.iterSched        = ObjectList.ObjectList(getattr(m5.objects, 'InterQueue', None)).get(opt_mem_sched_iter)()
@@ -249,17 +249,17 @@ def config_mem(options, system):
                     mem_ctrl.iterSched = m5.objects.InterStage()
                     mem_ctrl.dram.page_policy = "open"
                     mem_ctrl.iterSched.initStage(options.num_cpus)
-                    mem_ctrl.iterSched.readStages.st1_size_per_src   = opt_mem_sched_iter_st1_size
+                    mem_ctrl.iterSched.readStages.st1_size_per_src   = 16
                     mem_ctrl.iterSched.readStages.st1_formation_thred   = "40ns"
                     mem_ctrl.iterSched.readStages.st1_vec_pushPol = [ 'SMS_OVERTAKE' for i in range(options.num_cpus)]
-                    mem_ctrl.iterSched.readStages.st3_size_per_bank  = 32
-                    mem_ctrl.iterSched.readStages.st3_BypassMPKC_thred      = 3
-                    mem_ctrl.iterSched.readStages.st3_BypassLim = 16
+                    mem_ctrl.iterSched.readStages.st3_size_per_bank  = 16
+                    mem_ctrl.iterSched.readStages.st3_BypassMPKC_thred      = 0
+                    mem_ctrl.iterSched.readStages.st3_BypassLim = 0
 
-                    mem_ctrl.iterSched.writeStages.st1_size_per_src  = opt_mem_sched_iter_st1_size
+                    mem_ctrl.iterSched.writeStages.st1_size_per_src  = 16
                     mem_ctrl.iterSched.writeStages.st1_formation_thred   = "40ns"
                     mem_ctrl.iterSched.writeStages.st1_vec_pushPol = [ 'SMS_OVERTAKE' for i in range(options.num_cpus)]
-                    mem_ctrl.iterSched.writeStages.st3_size_per_bank = 32
+                    mem_ctrl.iterSched.writeStages.st3_size_per_bank = 16
                     mem_ctrl.iterSched.writeStages.st3_BypassMPKC_thred      = 0
                     mem_ctrl.iterSched.writeStages.st3_BypassLim = 0
                     #mem_ctrl.iterSched.writeStages.wr_cool_down_thred = "3000ns"

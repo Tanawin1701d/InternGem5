@@ -8,24 +8,31 @@
 
 #scons build/X86/gem5.opt -j 9
 
+time build/X86/gem5.opt \
+ --stats-file=/media/tanawin/tanawin1701e/Project/Intern/InternGem5/m5out/capstone5/fluid/sms_128size.txt \
+ --json-config=/media/tanawin/tanawin1701e/Project/Intern/InternGem5/m5out/capstone5/fluid/sms_128size.json \
+ configs/learning_gem5/newBench.py \
+ --mem-size=8192MB \
+ --workloads=fluidanimate \
+ --cpu-type=DerivO3CPU \
+ --l1d_size=16kB \
+ --l1i_size=1kB \
+ -n 4 \
+ --interQmemSched=STAGE_SCHED_Queue \
+ --caches
+
 # time build/X86/gem5.opt \
-#  --stats-file=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluidanimateRubyTester/sms1.txt \
-#  --json-config=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluidanimateRubyTester/sms1.json \
+#  --stats-file=/media/tanawin/tanawin1701e/Project/Intern/InternGem5/m5out/capstone5/test.txt \
+#  --json-config=/media/tanawin/tanawin1701e/Project/Intern/InternGem5/m5out/capstone5/test.json \
 #  configs/learning_gem5/newBench.py \
-#  --memAccessDebugStat=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluidanimateRubyTester/sms1.txt \
-#  --ruby \
-#  --vcs-per-vnet=256 \
-#  --topology=Mesh_XY \
-#  --mesh-rows=4 \
-#  --num-dirs=16  \
-#  --network=simple \
 #  --mem-size=8192MB \
-#  --pasec \
+#  --cmd='tests/test-progs/hello/bin/x86/linux/hello' \
 #  --cpu-type=DerivO3CPU \
-#  --l1d_size=1kB \
-#  --l1i_size=16kB \
-#  -n 16 \
+#  --l1d_size=16kB \
+#  --l1i_size=1kB \
+#  -n 4 \
 #  --interQmemSched=STAGE_SCHED_Queue \
+#  --caches
 
 
 # time build/X86/gem5.opt \
@@ -47,23 +54,38 @@
 #  -n 16 \
 #  --interQmemSched=STAGE_SCHED_Queue
 
-time build/X86/gem5.opt \
- --stats-file=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluid/testThread.txt \
- --json-config=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluid/testThread.json \
- configs/learning_gem5/newBench.py \
- --elastic-trace-en \
- --inst-trace-file=instTrace.proto.gz \
- --data-trace-file=dataTrace.proto.gz \
- --memAccessDebugStat=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/testThread.txt \
- --workloads=fluidanimate\
- --mem-size=16GB \
- --cpu-type=DerivO3CPU \
- --caches \
- --mem-type=SimpleMemory\
- --memSched=frfcfs \
- --memSchedSize=64 \
+#time build/X86/gem5.opt \
+# --stats-file=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluid/testThread.txt \
+# --json-config=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluid/testThread.json \
+# configs/learning_gem5/newBench.py \
+# --elastic-trace-en \
+# --inst-trace-file=instTrace.proto.gz \
+# --data-trace-file=dataTrace.proto.gz \
+# --memAccessDebugStat=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/testThread.txt \
+# --workloads=fluidanimate\
+# --mem-size=16GB \
+# --cpu-type=DerivO3CPU \
+# --caches \
+# --mem-type=SimpleMemory\
+# --memSched=frfcfs \
+# --memSchedSize=64 \
 
-
+# time build/X86/gem5.opt \
+#  --stats-file=//media/tanawin/tanawin1701e/Project/Intern/InternGem5/m5out/capstone/fluid4core/.txt \
+#  --json-config=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/fluid/testThread.json \
+#  configs/learning_gem5/newBench.py \
+#  --elastic-trace-en \
+#  --inst-trace-file=instTrace.proto.gz \
+#  --data-trace-file=dataTrace.proto.gz \
+#  --memAccessDebugStat=/media/tanawin/tanawin1701d/Project/Intern/InternGem5/m5out/testThread.txt \
+#  --workloads=fluidanimate\
+#  --mem-size=16GB \
+#  --cpu-type=DerivO3CPU \
+#  --caches \
+#  --mem-type=SimpleMemory\
+#  --interQmemSched=STAGE_SCHED_Queue \
+#  --memSched=frfcfs \
+#  --memSchedSize=64 \
 
 
 # time build/X86/gem5.opt \

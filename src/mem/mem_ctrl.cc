@@ -578,6 +578,9 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
         if (writeQueueFull(pkt_count, (uint8_t)stCpuid)) {
             DPRINTF(MemCtrl, "Write queue full, not accepting\n");
             // remember that we have to retry this port
+            if (iterSched){
+                iterSched->notifyWriteBlockOccur();
+            }
             retryWrReq = true;
             retryCpuId = stCpuid;
             stats.numWrRetry++;
@@ -1613,8 +1616,8 @@ MemCtrl::CtrlStats::regStats()
     requestorReadAvgLat = requestorReadTotalLat / requestorReadAccesses;
     requestorWriteAvgLat = requestorWriteTotalLat / requestorWriteAccesses;
 
-    pktNetWork.init(ctrl.numPriorities()+1);
-    pktCpus.init   (ctrl.numPriorities()+1);
+    pktNetWork.init(100);//ctrl.numPriorities()+1);
+    pktCpus.init   (100);//ctrl.numPriorities()+1);
 
 }
 
@@ -1766,18 +1769,18 @@ void
 memMapDebug::write(){
 
     std::ofstream     desfile  = std::ofstream(savePath);
-    for (auto& lp: logs){
-        auto& cpuId      = lp.first;
-        auto& addrVisSet = lp.second;
+    // for (auto& lp: logs){
+    //     auto& cpuId      = lp.first;
+    //     auto& addrVisSet = lp.second;
 
-        for(auto& av: addrVisSet){
-            desfile  << ((int)cpuId)    << " " 
-                     << av.rank         << " "
-                     << av.bank         << " "  
-                     << av.row          << " " 
-                     << av.count        << "\n";
-        }
-    }
+    //     for(auto& av: addrVisSet){
+    //         desfile  << ((int)cpuId)    << " " 
+    //                  << av.rank         << " "
+    //                  << av.bank         << " "  
+    //                  << av.row          << " " 
+    //                  << av.count        << "\n";
+    //     }
+    // }
     desfile.close();
 }
 void

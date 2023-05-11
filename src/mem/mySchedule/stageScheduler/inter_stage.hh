@@ -96,6 +96,8 @@ class InterStage : public InterQueue{
         writeStageExceed() override;
         bool
         writeStageLower() ; // lower the thredshold is not virtual function
+        
+        void notifyWriteBlockOccur() override;
         //////////////////
         public:
             InterStage(const InterStageParams &p);

@@ -671,6 +671,8 @@ class CPU : public BaseCPU
         //number of misc
         statistics::Scalar miscRegfileReads;
         statistics::Scalar miscRegfileWrites;
+        //final tick that thread was ejected by cpu
+        statistics::Scalar lastThreadTick;
     } cpuStats;
 
   public:

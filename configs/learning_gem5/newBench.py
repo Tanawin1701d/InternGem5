@@ -139,12 +139,22 @@ parser.add_argument(
 
 
 class fluidanimateWK(Process):
-    cwd = '/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/test-progs/memstress'
-    executable = '/media/tanawin/tanawin1701d/Project/Intern/InternGem5/tests/test-progs/memstress/fluidanimateSerial'
-    cmd = ['fluidanimateSerial', 
+    cwd = '/media/tanawin/tanawin1701e/Project/Intern/InternGem5/tests/gem5/myWorkload/parsec-3.0/pkgs/apps/fluidanimate'
+    executable = '/media/tanawin/tanawin1701e/Project/Intern/InternGem5/tests/gem5/myWorkload/parsec-3.0/pkgs/apps/fluidanimate/inst/amd64-linux.gcc-serial/bin/fluidanimate'
+    cmd = ['inst/amd64-linux.gcc-serial/bin/fluidanimate', 
             '1', 
-            '5', 
-            'in_100K.fluid'
+            '1', 
+            'inputs/in_35K.fluid',
+            'output/myoutput'
+          ]
+
+class blackscholesWK(Process):
+    cwd = '/media/tanawin/tanawin1701e/Project/Intern/InternGem5/tests/gem5/myWorkload/parsec-3.0/pkgs/apps/blackscholes'
+    executable = '/media/tanawin/tanawin1701e/Project/Intern/InternGem5/tests/gem5/myWorkload/parsec-3.0/pkgs/apps/blackscholes/inst/amd64-linux.gcc-serial/bin/blackscholes'
+    cmd = ['inst/amd64-linux.gcc-serial/bin/blackscholes', 
+            '1', 
+            'inputs/in_4K.txt', 
+            'output/myoutput'
           ]
 
 class luWK(Process):
@@ -175,9 +185,10 @@ numThreads = 1
 
 if args.workloads:
     templateWorkloads = {
-     "fluidanimate" : fluidanimateWK,
-     "lu"           : luWK,
-     "db"           : db
+     "fluidanimate"   : fluidanimateWK,
+     "blackscholesWK" : blackscholesWK,
+     "lu"             : luWK,
+     "db"             : db
     }
 
     if (opt_workload not in templateWorkloads):
